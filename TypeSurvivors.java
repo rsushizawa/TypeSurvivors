@@ -1,6 +1,8 @@
 import javax.swing.SwingUtilities;
 
-public class TypeJam {
+import Model.GameModel;
+
+public class TypeSurvivors {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

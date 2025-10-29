@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
 
+import Model.*;
+
 public class GameView {
 
     private final JFrame frame;
@@ -52,6 +54,7 @@ public class GameView {
                 drawGameOver(g2d);
             } else {
                 drawGame(g2d);
+                drawWaveStatus(g2d);
             }
         }
 
@@ -59,7 +62,7 @@ public class GameView {
             g.setFont(new Font("Monospaced", Font.PLAIN, 20));
             g.setColor(Color.WHITE);
 
-            for (GameModel.Word word : model.getWords()) {
+            for (Word word : model.getWords()) {
                 g.drawString(word.text, word.x, word.y);
             }
 
@@ -74,6 +77,36 @@ public class GameView {
             g.setFont(new Font("Monospaced", Font.BOLD, 18));
             g.drawString("Score: " + model.getScore(), 20, 30);
             g.drawString("Lives: " + model.getLives(), getWidth() - 100, 30);
+            g.drawString("Wave: " + model.getWaveNumber(), getWidth() / 2 - 40, 30);
+        }
+
+        private void drawWaveStatus(Graphics2D g) {
+            if (model.getWaveState() != WaveState.INTERMISSION) {
+                return;
+            }
+
+            double secondsLeft = (model.getIntermissionTickCounter() * GameModel.GAME_SPEED_MS) / 1000.0;
+            String msg;
+
+            if (model.getWaveNumber() == 0) {
+                msg = String.format("Game Starting in %.1fs", secondsLeft);
+            } else {
+                msg = String.format("Wave %d Complete!", model.getWaveNumber());
+            }
+            
+            g.setColor(new Color(0, 0, 0, 150));
+            g.fillRect(0, getHeight() / 2 - 60, getWidth(), 120);
+
+            g.setColor(Color.CYAN);
+            g.setFont(new Font("Monospaced", Font.BOLD, 30));
+            FontMetrics fm = g.getFontMetrics();
+            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2);
+
+            if (model.getWaveNumber() > 0) {
+                String nextMsg = String.format("Wave %d starting in %.1fs", model.getWaveNumber() + 1, secondsLeft);
+                fm = g.getFontMetrics();
+                g.drawString(nextMsg, (getWidth() - fm.stringWidth(nextMsg)) / 2, getHeight() / 2 + 40);
+            }
         }
 
         private void drawGameOver(Graphics2D g) {
@@ -91,3 +124,5 @@ public class GameView {
         }
     }
 }
+
+

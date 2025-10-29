@@ -4,6 +4,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+import Model.*;
+
 public class GameController extends KeyAdapter implements ActionListener {
 
     private final GameModel model;
@@ -44,10 +46,10 @@ public class GameController extends KeyAdapter implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         
         if (!model.isGameOver()) {
-            model.spawnWord();
-            model.updateWords();
+            model.updateGameState();
         }
         
         view.repaint();
     }
 }
+
