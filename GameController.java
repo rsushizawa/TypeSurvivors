@@ -32,8 +32,6 @@ public class GameController extends KeyAdapter implements ActionListener {
 
         if (c == KeyEvent.VK_BACK_SPACE) {
             model.backspaceTypedWord();
-        } else if (c == KeyEvent.VK_ENTER || c == ' ') {
-            model.submitTypedWord();
         } else if (Character.isLetter(c)) {
             model.appendTypedCharacter(c);
         }

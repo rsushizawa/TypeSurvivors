@@ -5,10 +5,10 @@ import java.util.Random;
 public class GameModel {
 
     public static final int GAME_SPEED_MS = 16;
-    public static final int WORD_SPEED_PIXELS = 2;
+    public static final int WORD_SPEED_PIXELS = 1;
     private static final int WORD_SPAWN_CHANCE = 80;
     private final String[] WORD_LIST = {
-        "java", "swing", "model", "view", "controller", "mvc", "event",
+        "java", "swing", "model", "view", "controller", "event",
         "pixel", "array", "string", "class", "object", "method", "logic"
     };
 
@@ -103,11 +103,11 @@ public class GameModel {
                 return;
             }
         }
-        currentTypedWord = "";
     }
 
     public void appendTypedCharacter(char c) {
         currentTypedWord += c;
+        submitTypedWord();
     }
 
     public void backspaceTypedWord() {
