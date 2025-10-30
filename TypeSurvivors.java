@@ -7,8 +7,8 @@ public class TypeSurvivors {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             
-            int gameWidth = 600;
-            int gameHeight = 800;
+            int gameWidth = 1900;
+            int gameHeight = 1260;
 
             GameModel model = new GameModel(gameWidth, gameHeight);
 
