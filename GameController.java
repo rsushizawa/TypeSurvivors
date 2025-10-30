@@ -52,4 +52,3 @@ public class GameController extends KeyAdapter implements ActionListener {
         view.repaint();
     }
 }
-
