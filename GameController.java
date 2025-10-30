@@ -25,10 +25,36 @@ public class GameController extends KeyAdapter implements ActionListener {
         gameLoop.start();
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        
+        // Handle ESC key for pausing
+        if (keyCode == KeyEvent.VK_ESCAPE) {
+            if (model.getGameState() == GameState.PLAYING || 
+                model.getGameState() == GameState.PAUSED) {
+                model.togglePause();
+                view.repaint();
+            }
+            return;
+        }
+
+        // Handle ENTER key for menu
+        if (keyCode == KeyEvent.VK_ENTER) {
+            if (model.getGameState() == GameState.MAIN_MENU) {
+                model.startNewGame();
+                view.repaint();
+            } else if (model.getGameState() == GameState.GAME_OVER) {
+                model.returnToMenu();
+                view.repaint();
+            }
+            return;
+        }
+    }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (model.isGameOver()) return;
+        if (model.getGameState() != GameState.PLAYING) return;
 
         char c = e.getKeyChar();
 
@@ -41,11 +67,9 @@ public class GameController extends KeyAdapter implements ActionListener {
         view.repaint();
     }
 
-
     @Override
     public void actionPerformed(ActionEvent e) {
-        
-        if (!model.isGameOver()) {
+        if (model.getGameState() == GameState.PLAYING) {
             model.updateGameState();
         }
         

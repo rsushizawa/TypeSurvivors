@@ -15,6 +15,11 @@ public class TypingManager {
         return displayTypedWord;
     }
 
+    public void reset(){
+        targetEnemy = null;
+        displayTypedWord = "";
+    }
+
     private void resetTarget() {
         targetEnemy = null;
         displayTypedWord = "";

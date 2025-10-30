@@ -14,6 +14,11 @@ public class GameStats {
         totalGameTicks++;
     }
 
+    public void reset(){
+        totalCharsTyped = 0;
+        totalGameTicks = 0;
+    }
+
     public int getWPM() {
         if (totalGameTicks == 0) {
             return 0;

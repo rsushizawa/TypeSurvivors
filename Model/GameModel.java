@@ -6,7 +6,7 @@ public class GameModel {
 
     private int score = 0;
     private int lives = 5;
-    private boolean isGameOver = false;
+    private GameState gameState = GameState.MAIN_MENU;
 
     private final WaveManager waveManager;
     private final EnemyManager enemyManager;
@@ -22,15 +22,39 @@ public class GameModel {
         this.gameStats = new GameStats();
     }
 
+    public void startNewGame() {
+        score = 0;
+        lives = 5;
+        gameState = GameState.PLAYING;
+        waveManager.reset();
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
+        gameStats.reset();
+    }
+
+    public void togglePause() {
+        if (gameState == GameState.PLAYING) {
+            gameState = GameState.PAUSED;
+        } else if (gameState == GameState.PAUSED) {
+            gameState = GameState.PLAYING;
+        }
+    }
+
+    public void returnToMenu() {
+        gameState = GameState.MAIN_MENU;
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
+    }
+
     private void loseLife() {
         lives--;
         if (lives <= 0) {
-            isGameOver = true;
+            gameState = GameState.GAME_OVER;
         }
     }
 
     public void updateGameState() {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
 
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
             gameStats.incrementGameTicks();
@@ -71,7 +95,7 @@ public class GameModel {
     }
 
     public void appendTypedCharacter(char c) {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
         
         Enemy preHitTarget = typingManager.getTargetEnemy();
         TypingResult result = typingManager.handleKeyTyped(c, enemyManager.getEnemies());
@@ -89,7 +113,7 @@ public class GameModel {
     }
 
     public void backspaceTypedWord() {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
         typingManager.handleBackspace();
     }
 
@@ -101,8 +125,12 @@ public class GameModel {
         return lives;
     }
 
+    public GameState getGameState() {
+        return gameState;
+    }
+
     public boolean isGameOver() {
-        return isGameOver;
+        return gameState == GameState.GAME_OVER;
     }
 
     public ArrayList<Enemy> getEnemies() {
