@@ -61,16 +61,15 @@ public class GameView {
         private void drawGame(Graphics2D g) {
             g.setFont(new Font("Monospaced", Font.PLAIN, 20));
             
-            Word target = model.getTargetWord();
+            Enemy target = model.getTargetEnemy();
 
-            for (Word word : model.getWords()) {
-
-                if (word == target) {
+            for (Enemy enemy : model.getEnemies()) {
+                if (enemy == target) {
                     g.setColor(Color.RED);
                 } else {
-                    g.setColor(Color.WHITE); 
+                    g.setColor(Color.WHITE);
                 }
-                g.drawString(word.text, word.x, word.y);
+                g.drawString(enemy.text, enemy.x, enemy.y);
             }
 
             g.setColor(Color.RED);
