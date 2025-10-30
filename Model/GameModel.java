@@ -18,7 +18,13 @@ public class GameModel {
 
     private final ArrayList<Word> words = new ArrayList<>();
     private final Random random = new Random();
-    private String currentTypedWord = "";
+    
+    // --- MODIFIED ---
+    // 'currentTypedWord' removed
+    private Word targetWord = null;
+    private String displayTypedWord = ""; // For the ">" prompt
+    // ---
+    
     private int score = 0;
     private int lives = 5;
     private boolean isGameOver = false;
@@ -52,8 +58,12 @@ public class GameModel {
         return lives;
     }
 
-    public String getCurrentTypedWord() {
-        return currentTypedWord;
+    public String getDisplayTypedWord() {
+        return displayTypedWord;
+    }
+
+    public Word getTargetWord() {
+        return targetWord;
     }
 
     public boolean isGameOver() {
@@ -137,6 +147,10 @@ public class GameModel {
                 if (lives <= 0) {
                     isGameOver = true;
                 }
+                if (word == targetWord) {
+                    targetWord = null;
+                    displayTypedWord = ""; 
+                }
             }
         }
     }
@@ -167,32 +181,45 @@ public class GameModel {
         }
     }
 
-    public void submitTypedWord() {
-        if (currentTypedWord.isEmpty()) return;
-        
-        Iterator<Word> iter = words.iterator();
-        while (iter.hasNext()) {
-            Word word = iter.next();
-            if (word.text.equals(currentTypedWord)) {
-                iter.remove();
-                score += word.text.length();
-                totalCharsTyped += currentTypedWord.length();
-                currentTypedWord = "";
-                return;
+    private void damageWord(Word word, char c) {
+        word.text = word.text.substring(1);
+        totalCharsTyped++;
+
+        if (word.text.isEmpty()) {
+            score += word.originalText.length();
+            words.remove(word);
+            targetWord = null;
+            displayTypedWord = "";
+        }
+    }
+    public void appendTypedCharacter(char c) {
+        if (targetWord == null) {
+            Word bestMatch = null;
+            for (Word word : words) {
+                if (word.text.startsWith(String.valueOf(c))) {
+                    if (bestMatch == null || word.y > bestMatch.y) {
+                        bestMatch = word;
+                    }
+                }
+            }
+
+            if (bestMatch != null) {
+                targetWord = bestMatch;
+                displayTypedWord = String.valueOf(c);
+                damageWord(targetWord, c);
+            }
+        } else {
+            if (targetWord.text.startsWith(String.valueOf(c))) {
+                displayTypedWord += c; 
+                damageWord(targetWord, c);
+            } else {
+                targetWord = null;
+                displayTypedWord = "";
             }
         }
     }
-
-    public void appendTypedCharacter(char c) {
-        currentTypedWord += c;
-        submitTypedWord();
-    }
-
     public void backspaceTypedWord() {
-        if (currentTypedWord.length() > 0) {
-            currentTypedWord = currentTypedWord.substring(0, currentTypedWord.length() - 1);
-        }
+        targetWord = null;
+        displayTypedWord = "";
     }
 }
-
-

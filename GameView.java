@@ -60,9 +60,16 @@ public class GameView {
 
         private void drawGame(Graphics2D g) {
             g.setFont(new Font("Monospaced", Font.PLAIN, 20));
-            g.setColor(Color.WHITE);
+            
+            Word target = model.getTargetWord();
 
             for (Word word : model.getWords()) {
+
+                if (word == target) {
+                    g.setColor(Color.RED);
+                } else {
+                    g.setColor(Color.WHITE); 
+                }
                 g.drawString(word.text, word.x, word.y);
             }
 
@@ -71,7 +78,7 @@ public class GameView {
 
             g.setColor(Color.GREEN);
             g.setFont(new Font("Monospaced", Font.BOLD, 22));
-            g.drawString("> " + model.getCurrentTypedWord(), 20, getHeight() - 20);
+            g.drawString("> " + model.getDisplayTypedWord(), 20, getHeight() - 20);
             
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Monospaced", Font.BOLD, 18));
@@ -126,5 +133,3 @@ public class GameView {
         }
     }
 }
-
-
