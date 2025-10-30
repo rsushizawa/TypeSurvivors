@@ -78,6 +78,8 @@ public class GameView {
             g.drawString("Score: " + model.getScore(), 20, 30);
             g.drawString("Lives: " + model.getLives(), getWidth() - 100, 30);
             g.drawString("Wave: " + model.getWaveNumber(), getWidth() / 2 - 40, 30);
+
+            g.drawString("WPM: " + model.getWPM(), 20, 55);
         }
 
         private void drawWaveStatus(Graphics2D g) {

@@ -32,6 +32,9 @@ public class GameModel {
     private WaveState waveState = WaveState.INTERMISSION;
     private int intermissionTickCounter = 90;
 
+    private int totalCharsTyped = 0;
+    private long totalGameTicks = 0;
+
     public GameModel(int gameWidth, int gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
@@ -71,6 +74,22 @@ public class GameModel {
 
     public int getIntermissionTickCounter() {
         return intermissionTickCounter;
+    }
+
+    public int getWPM() {
+        if (totalGameTicks == 0) {
+            return 0;
+        }
+        
+        double totalMinutes = (totalGameTicks * GAME_SPEED_MS) / 60000.0;
+
+        if (totalMinutes == 0) {
+            return 0;
+        }
+
+        double totalWords = totalCharsTyped / 5.0;
+        
+        return (int) (totalWords / totalMinutes);
     }
 
     private void startNextWave() {
@@ -127,10 +146,12 @@ public class GameModel {
 
         switch (waveState) {
             case SPAWNING:
+                totalGameTicks++;
                 trySpawnWord();
                 updateWords();
                 break;
             case WAITING_FOR_CLEAR:
+                totalGameTicks++;
                 updateWords();
                 if (words.isEmpty()) {
                     waveState = WaveState.INTERMISSION;
@@ -155,6 +176,7 @@ public class GameModel {
             if (word.text.equals(currentTypedWord)) {
                 iter.remove();
                 score += word.text.length();
+                totalCharsTyped += currentTypedWord.length();
                 currentTypedWord = "";
                 return;
             }
