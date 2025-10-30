@@ -68,27 +68,22 @@ public class GameView {
             }
         }
 
-        private void drawMainMenu(Graphics2D g) {
-            g.setColor(new Color(30, 144, 255));
-            g.setFont(new Font("Monospaced", Font.BOLD, 60));
-            String title = "TYPE SURVIVORS";
+        private void drawCenteredString(Graphics2D g, String text, int y, Color color, String fontName, int fontStyle, int fontSize) {
+            g.setColor(color);
+            g.setFont(new Font(fontName, fontStyle, fontSize));
             FontMetrics fm = g.getFontMetrics();
-            g.drawString(title, (getWidth() - fm.stringWidth(title)) / 2, getHeight() / 3);
+            g.drawString(text, (getWidth() - fm.stringWidth(text)) / 2, y);
+        }
 
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Monospaced", Font.PLAIN, 24));
-            String subtitle = "Type words to destroy enemies!";
-            fm = g.getFontMetrics();
-            g.drawString(subtitle, (getWidth() - fm.stringWidth(subtitle)) / 2, getHeight() / 3 + 60);
+        private void drawCenteredString(Graphics2D g, String text, int y, Color color, int fontStyle, int fontSize) {
+            drawCenteredString(g, text, y, color, "Monospaced", fontStyle, fontSize);
+        }
 
-            g.setColor(Color.GREEN);
-            g.setFont(new Font("Monospaced", Font.BOLD, 28));
-            String start = "Press ENTER to Start";
-            fm = g.getFontMetrics();
-            g.drawString(start, (getWidth() - fm.stringWidth(start)) / 2, getHeight() / 2 + 40);
+        private void drawMainMenu(Graphics2D g) {
+            drawCenteredString(g, "TYPE SURVIVORS", getHeight() / 3, new Color(30, 144, 255), Font.BOLD, 60);
+            drawCenteredString(g, "Type words to destroy enemies!", getHeight() / 3 + 60, Color.WHITE, Font.PLAIN, 24);
+            drawCenteredString(g, "Press ENTER to Start", getHeight() / 2 + 40, Color.GREEN, Font.BOLD, 28);
 
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Monospaced", Font.PLAIN, 18));
             String[] instructions = {
                 "How to Play:",
                 "- Type the letters of falling words",
@@ -99,16 +94,11 @@ public class GameView {
 
             int startY = getHeight() / 2 + 120;
             for (int i = 0; i < instructions.length; i++) {
-                String line = instructions[i];
                 if (i == 0) {
-                    g.setColor(Color.CYAN);
-                    g.setFont(new Font("Monospaced", Font.BOLD, 20));
+                    drawCenteredString(g, instructions[i], startY + (i * 30), Color.CYAN, Font.BOLD, 20);
                 } else {
-                    g.setColor(Color.LIGHT_GRAY);
-                    g.setFont(new Font("Monospaced", Font.PLAIN, 16));
+                    drawCenteredString(g, instructions[i], startY + (i * 30), Color.LIGHT_GRAY, Font.PLAIN, 16);
                 }
-                fm = g.getFontMetrics();
-                g.drawString(line, (getWidth() - fm.stringWidth(line)) / 2, startY + (i * 30));
             }
         }
 
@@ -116,17 +106,8 @@ public class GameView {
             g.setColor(new Color(0, 0, 0, 200));
             g.fillRect(0, 0, getWidth(), getHeight());
 
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Monospaced", Font.BOLD, 48));
-            String msg = "PAUSED";
-            FontMetrics fm = g.getFontMetrics();
-            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2 - 20);
-
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Monospaced", Font.PLAIN, 22));
-            String resume = "Press ESC to Resume";
-            fm = g.getFontMetrics();
-            g.drawString(resume, (getWidth() - fm.stringWidth(resume)) / 2, getHeight() / 2 + 30);
+            drawCenteredString(g, "PAUSED", getHeight() / 2 - 20, Color.YELLOW, Font.BOLD, 48);
+            drawCenteredString(g, "Press ESC to Resume", getHeight() / 2 + 30, Color.WHITE, Font.PLAIN, 22);
         }
 
         private void drawGame(Graphics2D g) {
@@ -155,7 +136,6 @@ public class GameView {
             g.drawString("Score: " + model.getScore(), 20, 30);
             g.drawString("Lives: " + model.getLives(), getWidth() - 100, 30);
             g.drawString("Wave: " + model.getWaveNumber(), getWidth() / 2 - 40, 30);
-
             g.drawString("WPM: " + model.getWPM(), 20, 55);
         }
 
@@ -176,42 +156,19 @@ public class GameView {
             g.setColor(new Color(0, 0, 0, 150));
             g.fillRect(0, getHeight() / 2 - 60, getWidth(), 120);
 
-            g.setColor(Color.CYAN);
-            g.setFont(new Font("Monospaced", Font.BOLD, 30));
-            FontMetrics fm = g.getFontMetrics();
-            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2);
+            drawCenteredString(g, msg, getHeight() / 2, Color.CYAN, Font.BOLD, 30);
 
             if (model.getWaveNumber() > 0) {
                 String nextMsg = String.format("Wave %d starting in %.1fs", model.getWaveNumber() + 1, secondsLeft);
-                fm = g.getFontMetrics();
-                g.drawString(nextMsg, (getWidth() - fm.stringWidth(nextMsg)) / 2, getHeight() / 2 + 40);
+                drawCenteredString(g, nextMsg, getHeight() / 2 + 40, Color.CYAN, Font.BOLD, 30);
             }
         }
 
         private void drawGameOver(Graphics2D g) {
-            g.setColor(Color.RED);
-            g.setFont(new Font("Monospaced", Font.BOLD, 48));
-            String msg = "GAME OVER";
-            FontMetrics fm = g.getFontMetrics();
-            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2 - 60);
-
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Monospaced", Font.BOLD, 24));
-            String finalScore = "Final Score: " + model.getScore();
-            fm = g.getFontMetrics();
-            g.drawString(finalScore, (getWidth() - fm.stringWidth(finalScore)) / 2, getHeight() / 2);
-
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Monospaced", Font.PLAIN, 20));
-            String wpm = "WPM: " + model.getWPM();
-            fm = g.getFontMetrics();
-            g.drawString(wpm, (getWidth() - fm.stringWidth(wpm)) / 2, getHeight() / 2 + 40);
-
-            g.setColor(Color.GREEN);
-            g.setFont(new Font("Monospaced", Font.BOLD, 22));
-            String restart = "Press ENTER to Return to Menu";
-            fm = g.getFontMetrics();
-            g.drawString(restart, (getWidth() - fm.stringWidth(restart)) / 2, getHeight() / 2 + 100);
+            drawCenteredString(g, "GAME OVER", getHeight() / 2 - 60, Color.RED, Font.BOLD, 48);
+            drawCenteredString(g, "Final Score: " + model.getScore(), getHeight() / 2, Color.WHITE, Font.BOLD, 24);
+            drawCenteredString(g, "WPM: " + model.getWPM(), getHeight() / 2 + 40, Color.YELLOW, Font.PLAIN, 20);
+            drawCenteredString(g, "Press ENTER to Return to Menu", getHeight() / 2 + 100, Color.GREEN, Font.BOLD, 22);
         }
     }
 }
