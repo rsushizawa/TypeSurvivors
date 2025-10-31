@@ -46,11 +46,11 @@ public class EnemyManager {
             int wordWidth = text.length() * 10; 
             int x = random.nextInt(Math.max(10, gameWidth - wordWidth - 20)) + 10;
             
-            int minSpeed = (int)(baseSpeed * 0.7);
+            int minSpeed = Math.max(1, (int)(baseSpeed * 0.7));
             int maxSpeed = (int)(baseSpeed * 1.3);
             int speedVariation = random.nextInt(maxSpeed - minSpeed + 1) + minSpeed;
             
-            Enemy newEnemy = new OrcEnemy(text, x, 32, speedVariation);
+            Enemy newEnemy = new OrcEnemy(text, x, 40, speedVariation);
             enemies.add(newEnemy);
             return true;
         }
