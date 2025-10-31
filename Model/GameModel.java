@@ -7,24 +7,29 @@ public class GameModel {
     private int score = 0;
     private int lives = 5;
     private GameState gameState = GameState.MAIN_MENU;
+    private String playerName = "";
 
     private final WaveManager waveManager;
     private final EnemyManager enemyManager;
     private final TypingManager typingManager;
     private final GameStats gameStats;
+    private final LeaderboardManager leaderboardManager;
     
     public static final int GAME_SPEED_MS = 16;
+    public static final int MAX_NAME_LENGTH = 10;
 
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
         this.enemyManager = new EnemyManager(gameWidth, gameHeight);
         this.typingManager = new TypingManager();
         this.gameStats = new GameStats();
+        this.leaderboardManager = new LeaderboardManager();
     }
 
     public void startNewGame() {
         score = 0;
         lives = 5;
+        playerName = "";
         gameState = GameState.PLAYING;
         waveManager.reset();
         enemyManager.getEnemies().clear();
@@ -49,8 +54,32 @@ public class GameModel {
     private void loseLife() {
         lives--;
         if (lives <= 0) {
-            gameState = GameState.GAME_OVER;
+            if (leaderboardManager.isHighScore(score)) {
+                gameState = GameState.ENTERING_NAME;
+            } else {
+                gameState = GameState.GAME_OVER;
+            }
         }
+    }
+
+    public void appendToPlayerName(char c) {
+        if (playerName.length() < MAX_NAME_LENGTH && Character.isLetterOrDigit(c)) {
+            playerName += Character.toUpperCase(c);
+        }
+    }
+
+    public void backspacePlayerName() {
+        if (playerName.length() > 0) {
+            playerName = playerName.substring(0, playerName.length() - 1);
+        }
+    }
+
+    public void submitHighScore() {
+        if (playerName.isEmpty()) {
+            playerName = "PLAYER";
+        }
+        leaderboardManager.addHighScore(playerName, score, waveManager.getWaveNumber(), gameStats.getMaxWPM());
+        gameState = GameState.GAME_OVER;
     }
 
     public void updateGameState() {
@@ -133,6 +162,10 @@ public class GameModel {
         return gameState == GameState.GAME_OVER;
     }
 
+    public String getPlayerName() {
+        return playerName;
+    }
+
     public ArrayList<Enemy> getEnemies() {
         return enemyManager.getEnemies();
     }
@@ -159,5 +192,13 @@ public class GameModel {
 
     public int getWPM() {
         return gameStats.getWPM();
+    }
+
+    public int getMaxWPM() {
+        return gameStats.getMaxWPM();
+    }
+
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
 }

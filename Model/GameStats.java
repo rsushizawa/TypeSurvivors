@@ -5,6 +5,13 @@ public class GameStats {
     public static final int GAME_SPEED_MS = 16;
     private int totalCharsTyped = 0;
     private long totalGameTicks = 0;
+    private int maxWPM = 0;
+
+    public void reset() {
+        totalCharsTyped = 0;
+        totalGameTicks = 0;
+        maxWPM = 0;
+    }
 
     public void incrementCharsTyped(int count) {
         totalCharsTyped += count;
@@ -12,11 +19,11 @@ public class GameStats {
 
     public void incrementGameTicks() {
         totalGameTicks++;
-    }
-
-    public void reset(){
-        totalCharsTyped = 0;
-        totalGameTicks = 0;
+        // Update max WPM
+        int currentWPM = getWPM();
+        if (currentWPM > maxWPM) {
+            maxWPM = currentWPM;
+        }
     }
 
     public int getWPM() {
@@ -33,5 +40,9 @@ public class GameStats {
         double totalWords = totalCharsTyped / 5.0;
         
         return (int) (totalWords / totalMinutes);
+    }
+
+    public int getMaxWPM() {
+        return maxWPM;
     }
 }
