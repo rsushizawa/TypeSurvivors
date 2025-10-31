@@ -1,6 +1,7 @@
 package Model;
 
 import java.util.ArrayList;
+import Model.Enums.*;
 
 public class TypingManager {
 
@@ -15,7 +16,7 @@ public class TypingManager {
         return displayTypedWord;
     }
 
-    public void reset(){
+    public void reset() {
         targetEnemy = null;
         displayTypedWord = "";
     }
@@ -75,4 +76,3 @@ public class TypingManager {
         }
     }
 }
-

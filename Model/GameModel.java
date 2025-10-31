@@ -1,7 +1,7 @@
 package Model;
 
 import java.util.ArrayList;
-
+import Model.Enums.*;
 public class GameModel {
 
     private int score = 0;
@@ -85,6 +85,13 @@ public class GameModel {
     public void updateGameState() {
         if (gameState != GameState.PLAYING) return;
 
+        // Update animations for all animated enemies
+        for (Enemy enemy : enemyManager.getEnemies()) {
+            if (enemy instanceof AnimatedEnemy) {
+                ((AnimatedEnemy) enemy).updateAnimation();
+            }
+        }
+
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
             gameStats.incrementGameTicks();
         }
@@ -96,7 +103,7 @@ public class GameModel {
         switch (waveManager.getWaveState()) {
             case SPAWNING:
                 if (waveManager.canSpawnEnemy()) {
-                    if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance())) {
+                    if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance(), waveManager.getWaveSpeedPixels())) {
                         waveManager.notifyEnemySpawned();
                     }
                 }
@@ -116,11 +123,15 @@ public class GameModel {
     }
 
     private void updateAndCheckLostEnemies() {
-        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(waveManager.getWaveSpeedPixels());
+        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies();
         for (Enemy lostEnemy : lostEnemies) {
             loseLife();
             typingManager.checkTargetLost(lostEnemy);
         }
+    }
+    
+    public int getWaveSpeedPixels() {
+        return waveManager.getWaveSpeedPixels();
     }
 
     public void appendTypedCharacter(char c) {

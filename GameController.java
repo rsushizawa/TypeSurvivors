@@ -5,7 +5,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import Model.*;
-
+import Model.Enums.*;
 public class GameController extends KeyAdapter implements ActionListener {
 
     private final GameModel model;
