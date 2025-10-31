@@ -13,6 +13,15 @@ public class WaveManager {
     private int baseWordSpeed = 1;
     private int baseSpawnChance = 80;
 
+    public void reset() {
+        waveNumber = 0;
+        enemiesLeftToSpawn = 0;
+        waveSpeedPixels = 1;
+        waveSpawnChance = 80;
+        waveState = WaveState.INTERMISSION;
+        intermissionTickCounter = 90;
+    }
+
     public WaveState getWaveState() {
         return waveState;
     }
@@ -70,4 +79,3 @@ public class WaveManager {
         }
     }
 }
-

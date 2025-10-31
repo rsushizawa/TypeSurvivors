@@ -25,27 +25,58 @@ public class GameController extends KeyAdapter implements ActionListener {
         gameLoop.start();
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        
+        if (keyCode == KeyEvent.VK_ESCAPE) {
+            if (model.getGameState() == GameState.PLAYING || 
+                model.getGameState() == GameState.PAUSED) {
+                model.togglePause();
+                view.repaint();
+            }
+            return;
+        }
+
+        if (keyCode == KeyEvent.VK_ENTER) {
+            if (model.getGameState() == GameState.MAIN_MENU) {
+                model.startNewGame();
+                view.repaint();
+            } else if (model.getGameState() == GameState.GAME_OVER) {
+                model.returnToMenu();
+                view.repaint();
+            } else if (model.getGameState() == GameState.ENTERING_NAME) {
+                model.submitHighScore();
+                view.repaint();
+            }
+            return;
+        }
+    }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (model.isGameOver()) return;
-
         char c = e.getKeyChar();
 
-        if (c == KeyEvent.VK_BACK_SPACE) {
-            model.backspaceTypedWord();
-        } else if (Character.isLetter(c)) {
-            model.appendTypedCharacter(c);
+        if (model.getGameState() == GameState.PLAYING) {
+            if (c == KeyEvent.VK_BACK_SPACE) {
+                model.backspaceTypedWord();
+            } else if (Character.isLetter(c)) {
+                model.appendTypedCharacter(c);
+            }
+            view.repaint();
+        } else if (model.getGameState() == GameState.ENTERING_NAME) {
+            if (c == KeyEvent.VK_BACK_SPACE) {
+                model.backspacePlayerName();
+            } else if (Character.isLetterOrDigit(c)) {
+                model.appendToPlayerName(c);
+            }
+            view.repaint();
         }
-        
-        view.repaint();
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        
-        if (!model.isGameOver()) {
+        if (model.getGameState() == GameState.PLAYING) {
             model.updateGameState();
         }
         

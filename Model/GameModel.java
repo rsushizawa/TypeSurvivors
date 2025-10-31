@@ -6,31 +6,84 @@ public class GameModel {
 
     private int score = 0;
     private int lives = 5;
-    private boolean isGameOver = false;
+    private GameState gameState = GameState.MAIN_MENU;
+    private String playerName = "";
 
     private final WaveManager waveManager;
     private final EnemyManager enemyManager;
     private final TypingManager typingManager;
     private final GameStats gameStats;
+    private final LeaderboardManager leaderboardManager;
     
     public static final int GAME_SPEED_MS = 16;
+    public static final int MAX_NAME_LENGTH = 10;
 
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
         this.enemyManager = new EnemyManager(gameWidth, gameHeight);
         this.typingManager = new TypingManager();
         this.gameStats = new GameStats();
+        this.leaderboardManager = new LeaderboardManager();
+    }
+
+    public void startNewGame() {
+        score = 0;
+        lives = 5;
+        playerName = "";
+        gameState = GameState.PLAYING;
+        waveManager.reset();
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
+        gameStats.reset();
+    }
+
+    public void togglePause() {
+        if (gameState == GameState.PLAYING) {
+            gameState = GameState.PAUSED;
+        } else if (gameState == GameState.PAUSED) {
+            gameState = GameState.PLAYING;
+        }
+    }
+
+    public void returnToMenu() {
+        gameState = GameState.MAIN_MENU;
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
     }
 
     private void loseLife() {
         lives--;
         if (lives <= 0) {
-            isGameOver = true;
+            if (leaderboardManager.isHighScore(score)) {
+                gameState = GameState.ENTERING_NAME;
+            } else {
+                gameState = GameState.GAME_OVER;
+            }
         }
     }
 
+    public void appendToPlayerName(char c) {
+        if (playerName.length() < MAX_NAME_LENGTH && Character.isLetterOrDigit(c)) {
+            playerName += Character.toUpperCase(c);
+        }
+    }
+
+    public void backspacePlayerName() {
+        if (playerName.length() > 0) {
+            playerName = playerName.substring(0, playerName.length() - 1);
+        }
+    }
+
+    public void submitHighScore() {
+        if (playerName.isEmpty()) {
+            playerName = "PLAYER";
+        }
+        leaderboardManager.addHighScore(playerName, score, waveManager.getWaveNumber(), gameStats.getMaxWPM());
+        gameState = GameState.GAME_OVER;
+    }
+
     public void updateGameState() {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
 
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
             gameStats.incrementGameTicks();
@@ -71,7 +124,7 @@ public class GameModel {
     }
 
     public void appendTypedCharacter(char c) {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
         
         Enemy preHitTarget = typingManager.getTargetEnemy();
         TypingResult result = typingManager.handleKeyTyped(c, enemyManager.getEnemies());
@@ -89,7 +142,7 @@ public class GameModel {
     }
 
     public void backspaceTypedWord() {
-        if (isGameOver) return;
+        if (gameState != GameState.PLAYING) return;
         typingManager.handleBackspace();
     }
 
@@ -101,8 +154,16 @@ public class GameModel {
         return lives;
     }
 
+    public GameState getGameState() {
+        return gameState;
+    }
+
     public boolean isGameOver() {
-        return isGameOver;
+        return gameState == GameState.GAME_OVER;
+    }
+
+    public String getPlayerName() {
+        return playerName;
     }
 
     public ArrayList<Enemy> getEnemies() {
@@ -131,5 +192,13 @@ public class GameModel {
 
     public int getWPM() {
         return gameStats.getWPM();
+    }
+
+    public int getMaxWPM() {
+        return gameStats.getMaxWPM();
+    }
+
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
 }

@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
+import java.util.List;
 
 import Model.*;
 
@@ -50,12 +51,154 @@ public class GameView {
             
             setBackground(Color.BLACK);
 
-            if (model.isGameOver()) {
-                drawGameOver(g2d);
-            } else {
-                drawGame(g2d);
-                drawWaveStatus(g2d);
+            switch (model.getGameState()) {
+                case MAIN_MENU:
+                    drawMainMenu(g2d);
+                    break;
+                case PLAYING:
+                    drawGame(g2d);
+                    drawWaveStatus(g2d);
+                    break;
+                case PAUSED:
+                    drawGame(g2d);
+                    drawPauseOverlay(g2d);
+                    break;
+                case ENTERING_NAME:
+                    drawNameEntry(g2d);
+                    break;
+                case GAME_OVER:
+                    drawGameOver(g2d);
+                    break;
             }
+        }
+
+        private void drawCenteredString(Graphics2D g, String text, int y, Color color, String fontName, int fontStyle, int fontSize) {
+            g.setColor(color);
+            g.setFont(new Font(fontName, fontStyle, fontSize));
+            FontMetrics fm = g.getFontMetrics();
+            g.drawString(text, (getWidth() - fm.stringWidth(text)) / 2, y);
+        }
+
+        private void drawCenteredString(Graphics2D g, String text, int y, Color color, int fontStyle, int fontSize) {
+            drawCenteredString(g, text, y, color, "Monospaced", fontStyle, fontSize);
+        }
+
+        private void drawMainMenu(Graphics2D g) {
+            drawCenteredString(g, "TYPE SURVIVORS", getHeight() / 6, new Color(30, 144, 255), Font.BOLD, 60);
+            drawCenteredString(g, "Type words to destroy enemies!", getHeight() / 6 + 60, Color.WHITE, Font.PLAIN, 24);
+            
+            drawLeaderboard(g, getHeight() / 6 + 120);
+
+            drawCenteredString(g, "Press ENTER to Start", getHeight() - 180, Color.GREEN, Font.BOLD, 28);
+
+            String[] instructions = {
+                "How to Play:",
+                "- Type the letters of falling words",
+                "- Complete words before they reach the bottom",
+                "- Press BACKSPACE to cancel current word",
+                "- Press ESC to pause the game"
+            };
+
+            int startY = getHeight() - 140;
+            for (int i = 0; i < instructions.length; i++) {
+                if (i == 0) {
+                    drawCenteredString(g, instructions[i], startY + (i * 25), Color.CYAN, Font.BOLD, 18);
+                } else {
+                    drawCenteredString(g, instructions[i], startY + (i * 25), Color.LIGHT_GRAY, Font.PLAIN, 14);
+                }
+            }
+        }
+
+        private void drawLeaderboard(Graphics2D g, int startY) {
+            drawCenteredString(g, "=== HIGH SCORES ===", startY, Color.YELLOW, Font.BOLD, 24);
+
+            List<HighScoreEntry> scores = model.getLeaderboardManager().getHighScores();
+            
+            if (scores.isEmpty()) {
+                drawCenteredString(g, "No scores yet!", startY + 40, Color.GRAY, Font.PLAIN, 18);
+                return;
+            }
+
+            g.setColor(Color.CYAN);
+            g.setFont(new Font("Monospaced", Font.BOLD, 14));
+            FontMetrics fm = g.getFontMetrics();
+            
+            String header = String.format("%-3s %-10s %8s %5s %5s", "#", "NAME", "SCORE", "WAVE", "WPM");
+            g.drawString(header, (getWidth() - fm.stringWidth(header)) / 2, startY + 40);
+
+            g.setFont(new Font("Monospaced", Font.PLAIN, 14));
+            fm = g.getFontMetrics();
+
+            for (int i = 0; i < scores.size(); i++) {
+                HighScoreEntry entry = scores.get(i);
+                
+                if (i % 2 == 0) {
+                    g.setColor(Color.WHITE);
+                } else {
+                    g.setColor(new Color(200, 200, 200));
+                }
+                
+                String line = String.format("%-3d %-10s %8d %5d %5d", 
+                    i + 1, 
+                    entry.getName(), 
+                    entry.getScore(),
+                    entry.getWave(),
+                    entry.getMaxWPM());
+                
+                g.drawString(line, (getWidth() - fm.stringWidth(line)) / 2, startY + 65 + (i * 25));
+            }
+        }
+
+        private void drawNameEntry(Graphics2D g) {
+            g.setColor(new Color(0, 0, 0, 230));
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            drawCenteredString(g, "NEW HIGH SCORE!", getHeight() / 3, Color.YELLOW, Font.BOLD, 48);
+            
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Monospaced", Font.BOLD, 24));
+            FontMetrics fm = g.getFontMetrics();
+            String scoreText = "Score: " + model.getScore() + "  Wave: " + model.getWaveNumber() + "  WPM: " + model.getMaxWPM();
+            g.drawString(scoreText, (getWidth() - fm.stringWidth(scoreText)) / 2, getHeight() / 3 + 50);
+
+            drawCenteredString(g, "Enter Your Name:", getHeight() / 2 - 40, Color.CYAN, Font.BOLD, 28);
+
+            int boxWidth = 300;
+            int boxHeight = 50;
+            int boxX = (getWidth() - boxWidth) / 2;
+            int boxY = getHeight() / 2;
+
+            g.setColor(new Color(50, 50, 50));
+            g.fillRect(boxX, boxY, boxWidth, boxHeight);
+            g.setColor(Color.GREEN);
+            g.drawRect(boxX, boxY, boxWidth, boxHeight);
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Monospaced", Font.BOLD, 32));
+            String displayName = model.getPlayerName();
+            if (displayName.isEmpty()) {
+                displayName = "_";
+            } else {
+                displayName += "_";
+            }
+            fm = g.getFontMetrics();
+            g.drawString(displayName, boxX + 10, boxY + 37);
+
+            g.setColor(Color.LIGHT_GRAY);
+            g.setFont(new Font("Monospaced", Font.PLAIN, 16));
+            String hint = "Max " + GameModel.MAX_NAME_LENGTH + " characters";
+            fm = g.getFontMetrics();
+            g.drawString(hint, (getWidth() - fm.stringWidth(hint)) / 2, boxY + boxHeight + 30);
+
+            drawCenteredString(g, "Press ENTER to Submit", getHeight() - 80, Color.GREEN, Font.BOLD, 22);
+        }
+
+        private void drawPauseOverlay(Graphics2D g) {
+            g.setColor(new Color(0, 0, 0, 200));
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            drawCenteredString(g, "PAUSED", getHeight() / 2 - 20, Color.YELLOW, Font.BOLD, 48);
+            drawCenteredString(g, "Press ESC to Resume", getHeight() / 2 + 30, Color.WHITE, Font.PLAIN, 22);
         }
 
         private void drawGame(Graphics2D g) {
@@ -84,7 +227,6 @@ public class GameView {
             g.drawString("Score: " + model.getScore(), 20, 30);
             g.drawString("Lives: " + model.getLives(), getWidth() - 100, 30);
             g.drawString("Wave: " + model.getWaveNumber(), getWidth() / 2 - 40, 30);
-
             g.drawString("WPM: " + model.getWPM(), 20, 55);
         }
 
@@ -105,30 +247,20 @@ public class GameView {
             g.setColor(new Color(0, 0, 0, 150));
             g.fillRect(0, getHeight() / 2 - 60, getWidth(), 120);
 
-            g.setColor(Color.CYAN);
-            g.setFont(new Font("Monospaced", Font.BOLD, 30));
-            FontMetrics fm = g.getFontMetrics();
-            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2);
+            drawCenteredString(g, msg, getHeight() / 2, Color.CYAN, Font.BOLD, 30);
 
             if (model.getWaveNumber() > 0) {
                 String nextMsg = String.format("Wave %d starting in %.1fs", model.getWaveNumber() + 1, secondsLeft);
-                fm = g.getFontMetrics();
-                g.drawString(nextMsg, (getWidth() - fm.stringWidth(nextMsg)) / 2, getHeight() / 2 + 40);
+                drawCenteredString(g, nextMsg, getHeight() / 2 + 40, Color.CYAN, Font.BOLD, 30);
             }
         }
 
         private void drawGameOver(Graphics2D g) {
-            g.setColor(Color.RED);
-            g.setFont(new Font("Monospaced", Font.BOLD, 48));
-            String msg = "GAME OVER";
-            FontMetrics fm = g.getFontMetrics();
-            g.drawString(msg, (getWidth() - fm.stringWidth(msg)) / 2, getHeight() / 2 - 20);
-
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Monospaced", Font.BOLD, 24));
-            String finalScore = "Final Score: " + model.getScore();
-            fm = g.getFontMetrics();
-            g.drawString(finalScore, (getWidth() - fm.stringWidth(finalScore)) / 2, getHeight() / 2 + 30);
+            drawCenteredString(g, "GAME OVER", getHeight() / 2 - 100, Color.RED, Font.BOLD, 48);
+            drawCenteredString(g, "Final Score: " + model.getScore(), getHeight() / 2 - 30, Color.WHITE, Font.BOLD, 24);
+            drawCenteredString(g, "Wave Reached: " + model.getWaveNumber(), getHeight() / 2 + 10, Color.WHITE, Font.PLAIN, 20);
+            drawCenteredString(g, "Max WPM: " + model.getMaxWPM(), getHeight() / 2 + 40, Color.YELLOW, Font.PLAIN, 20);
+            drawCenteredString(g, "Press ENTER to Return to Menu", getHeight() / 2 + 100, Color.GREEN, Font.BOLD, 22);
         }
     }
 }
