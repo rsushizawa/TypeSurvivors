@@ -1,6 +1,8 @@
 import javax.swing.SwingUtilities;
 
+import Controller.GameController;
 import Model.GameModel;
+import View.GameView;
 
 public class TypeSurvivors {
 

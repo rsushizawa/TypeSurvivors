@@ -1,5 +1,6 @@
-package Model;
-import Model.Enums.*;
+package Manager;
+
+import Data.WaveState;
 
 public class WaveManager {
 

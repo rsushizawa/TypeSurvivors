@@ -1,11 +1,16 @@
+package View;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import Model.*;
-import Model.Enums.*;
+import Model.GameModel;
+import Entity.Enemy.Enemy;
+import Data.WaveState;
+import Data.HighScoreEntry;
+
 public class GameView {
 
     private final JFrame frame;
@@ -174,7 +179,6 @@ public class GameView {
             g.setColor(Color.GREEN);
             g.drawRect(boxX, boxY, boxWidth, boxHeight);
 
-            // Draw player name
             g.setColor(Color.WHITE);
             g.setFont(new Font("Monospaced", Font.BOLD, 32));
             String displayName = model.getPlayerName();
@@ -207,31 +211,35 @@ public class GameView {
             Enemy target = model.getTargetEnemy();
 
             for (Enemy enemy : model.getEnemies()) {
-                if (enemy instanceof AnimatedEnemy) {
-                    AnimatedEnemy animEnemy = (AnimatedEnemy) enemy;
-                    if (animEnemy.hasSprites()) {
-                        BufferedImage sprite = animEnemy.getCurrentSprite();
-                        if (sprite != null) {
-
-                            g.drawImage(sprite, enemy.x, enemy.y - 32, null);
-                            
-                            g.setFont(new Font("Monospaced", Font.BOLD, 16));
-                            FontMetrics fm = g.getFontMetrics();
-                            int textWidth = fm.stringWidth(enemy.text);
-                            int spriteWidth = sprite.getWidth();
-                            int centeredX = enemy.x + (spriteWidth - textWidth) / 2;
-                            
-                            g.setColor(Color.BLACK);
-                            g.drawString(enemy.text, centeredX + 1, enemy.y + 6);
-                            
-                            if (enemy == target) {
-                                g.setColor(Color.RED);
-                            } else {
-                                g.setColor(Color.WHITE);
-                            }
-                            g.drawString(enemy.text, centeredX, enemy.y + 15);
+                if (enemy.hasSprites()) {
+                    BufferedImage sprite = enemy.getCurrentSprite();
+                    if (sprite != null) {
+                        g.drawImage(sprite, enemy.x, enemy.y - 32, null);
+                        
+                        g.setFont(new Font("Monospaced", Font.BOLD, 16));
+                        FontMetrics fm = g.getFontMetrics();
+                        int textWidth = fm.stringWidth(enemy.text);
+                        int spriteWidth = enemy.getSpriteWidth();
+                        int centeredX = enemy.x + (spriteWidth - textWidth) / 2;
+                        
+                        g.setColor(Color.BLACK);
+                        g.drawString(enemy.text, centeredX + 1, enemy.y + 6);
+                        
+                        if (enemy == target) {
+                            g.setColor(Color.RED);
+                        } else {
+                            g.setColor(Color.WHITE);
                         }
+                        g.drawString(enemy.text, centeredX, enemy.y + 5);
                     }
+                } else {
+                    g.setFont(new Font("Monospaced", Font.PLAIN, 20));
+                    if (enemy == target) {
+                        g.setColor(Color.RED);
+                    } else {
+                        g.setColor(Color.WHITE);
+                    }
+                    g.drawString(enemy.text, enemy.x, enemy.y);
                 }
             }
 

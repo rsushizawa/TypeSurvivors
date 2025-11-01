@@ -1,9 +1,10 @@
-package Model;
+package Manager;
 
+import Entity.Enemy.Enemy;
+import Entity.Enemy.OrcEnemy;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
-
 
 public class EnemyManager {
 
@@ -47,8 +48,8 @@ public class EnemyManager {
             int x = random.nextInt(Math.max(10, gameWidth - wordWidth - 20)) + 10;
             
             int minSpeed = Math.max(1, (int)(baseSpeed * 0.7));
-            int maxSpeed = (int)(baseSpeed * 1.3);
-            int speedVariation = random.nextInt(maxSpeed - minSpeed + 1) + minSpeed;
+            int maxSpeed = (int)(baseSpeed * 1.3) + 1;
+            int speedVariation = random.nextInt(maxSpeed - minSpeed) + minSpeed;
             
             Enemy newEnemy = new OrcEnemy(text, x, 40, speedVariation);
             enemies.add(newEnemy);

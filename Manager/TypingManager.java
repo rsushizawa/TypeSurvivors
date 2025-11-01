@@ -1,7 +1,8 @@
-package Model;
+package Manager;
 
+import Entity.Enemy.Enemy;
+import Data.TypingResult;
 import java.util.ArrayList;
-import Model.Enums.*;
 
 public class TypingManager {
 

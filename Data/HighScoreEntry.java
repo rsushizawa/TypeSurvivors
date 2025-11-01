@@ -1,4 +1,4 @@
-package Model;
+package Data;
 
 public class HighScoreEntry implements Comparable<HighScoreEntry> {
     private final String name;

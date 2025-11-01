@@ -1,7 +1,16 @@
 package Model;
 
+import Entity.Enemy.Enemy;
+import Manager.EnemyManager;
+import Manager.TypingManager;
+import Manager.WaveManager;
+import Manager.LeaderboardManager;
+import Data.GameState;
+import Data.WaveState;
+import Data.TypingResult;
+import Data.GameStats;
 import java.util.ArrayList;
-import Model.Enums.*;
+
 public class GameModel {
 
     private int score = 0;
@@ -85,11 +94,8 @@ public class GameModel {
     public void updateGameState() {
         if (gameState != GameState.PLAYING) return;
 
-        // Update animations for all animated enemies
         for (Enemy enemy : enemyManager.getEnemies()) {
-            if (enemy instanceof AnimatedEnemy) {
-                ((AnimatedEnemy) enemy).updateAnimation();
-            }
+            enemy.updateAnimation();
         }
 
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
@@ -128,10 +134,6 @@ public class GameModel {
             loseLife();
             typingManager.checkTargetLost(lostEnemy);
         }
-    }
-    
-    public int getWaveSpeedPixels() {
-        return waveManager.getWaveSpeedPixels();
     }
 
     public void appendTypedCharacter(char c) {

@@ -1,11 +1,12 @@
-package Model;
+package Entity.Enemy;
 
+import Animation.SpriteSheetLoader;
 import java.awt.image.BufferedImage;
 
-public class OrcEnemy extends AnimatedEnemy {
+public class OrcEnemy extends Enemy {
     
-    private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png";
-    private static final int SPRITE_WIDTH = 64;
+    private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png"; 
+    private static final int SPRITE_WIDTH = 64; 
     private static final int SPRITE_HEIGHT = 64;
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;

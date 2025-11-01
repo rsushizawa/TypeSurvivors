@@ -1,4 +1,4 @@
-package Model.Enums;
+package Data;
 
 public enum TypingResult {
     HIT,
