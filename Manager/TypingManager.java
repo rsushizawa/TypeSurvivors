@@ -1,5 +1,7 @@
-package Model;
+package Manager;
 
+import Entity.Enemy.Enemy;
+import Data.TypingResult;
 import java.util.ArrayList;
 
 public class TypingManager {
@@ -15,7 +17,7 @@ public class TypingManager {
         return displayTypedWord;
     }
 
-    public void reset(){
+    public void reset() {
         targetEnemy = null;
         displayTypedWord = "";
     }
@@ -75,4 +77,3 @@ public class TypingManager {
         }
     }
 }
-

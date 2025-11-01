@@ -1,4 +1,6 @@
-package Model;
+package Manager;
+
+import Data.WaveState;
 
 public class WaveManager {
 

@@ -1,4 +1,4 @@
-package Model;
+package Data;
 
 public enum GameState {
     MAIN_MENU,

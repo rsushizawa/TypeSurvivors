@@ -1,10 +1,14 @@
+package Controller;
+
 import javax.swing.Timer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-import Model.*;
+import Model.GameModel;
+import View.GameView;
+import Data.GameState;
 
 public class GameController extends KeyAdapter implements ActionListener {
 

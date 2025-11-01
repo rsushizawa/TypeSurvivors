@@ -1,4 +1,4 @@
-package Model;
+package Data;
 
 public class GameStats {
 
@@ -19,7 +19,6 @@ public class GameStats {
 
     public void incrementGameTicks() {
         totalGameTicks++;
-        // Update max WPM
         int currentWPM = getWPM();
         if (currentWPM > maxWPM) {
             maxWPM = currentWPM;

@@ -1,5 +1,14 @@
 package Model;
 
+import Entity.Enemy.Enemy;
+import Manager.EnemyManager;
+import Manager.TypingManager;
+import Manager.WaveManager;
+import Manager.LeaderboardManager;
+import Data.GameState;
+import Data.WaveState;
+import Data.TypingResult;
+import Data.GameStats;
 import java.util.ArrayList;
 
 public class GameModel {
@@ -85,6 +94,10 @@ public class GameModel {
     public void updateGameState() {
         if (gameState != GameState.PLAYING) return;
 
+        for (Enemy enemy : enemyManager.getEnemies()) {
+            enemy.updateAnimation();
+        }
+
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
             gameStats.incrementGameTicks();
         }
@@ -96,7 +109,7 @@ public class GameModel {
         switch (waveManager.getWaveState()) {
             case SPAWNING:
                 if (waveManager.canSpawnEnemy()) {
-                    if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance())) {
+                    if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance(), waveManager.getWaveSpeedPixels())) {
                         waveManager.notifyEnemySpawned();
                     }
                 }
@@ -116,7 +129,7 @@ public class GameModel {
     }
 
     private void updateAndCheckLostEnemies() {
-        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(waveManager.getWaveSpeedPixels());
+        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies();
         for (Enemy lostEnemy : lostEnemies) {
             loseLife();
             typingManager.checkTargetLost(lostEnemy);

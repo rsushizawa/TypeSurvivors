@@ -1,5 +1,6 @@
-package Model;
+package Manager;
 
+import Data.HighScoreEntry;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +60,7 @@ public class LeaderboardManager {
         HighScoreEntry entry = new HighScoreEntry(name, score, wave, maxWPM);
         highScores.add(entry);
         Collections.sort(highScores);
-
+        
         while (highScores.size() > MAX_ENTRIES) {
             highScores.remove(highScores.size() - 1);
         }
