@@ -1,47 +1,162 @@
 package Model;
+
+import Entity.Enemy.Enemy;
+import Manager.EnemyManager;
+import Manager.TypingManager;
+import Manager.WaveManager;
+import Manager.LeaderboardManager;
+import Data.GameState;
+import Data.WaveState;
+import Data.TypingResult;
+import Data.GameStats;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
 
 public class GameModel {
 
-    public static final int GAME_SPEED_MS = 16;
-    public static final int INTERMISSION_TICKS = 180;
-
-    private int baseWordSpeed = 1;
-    private int baseSpawnChance = 80;
-
-    private final String[] WORD_LIST = {
-        "java", "swing", "model", "view", "controller", "event",
-        "pixel", "array", "string", "class", "object", "method", "logic"
-    };
-
-    private final ArrayList<Word> words = new ArrayList<>();
-    private final Random random = new Random();
-    private String currentTypedWord = "";
     private int score = 0;
     private int lives = 5;
-    private boolean isGameOver = false;
-    private final int gameWidth;
-    private final int gameHeight;
+    private GameState gameState = GameState.MAIN_MENU;
+    private String playerName = "";
 
-    private int waveNumber = 0;
-    private int wordsLeftToSpawn;
-    private int waveSpeedPixels = 1;
-    private int waveSpawnChance = 80;
-    private WaveState waveState = WaveState.INTERMISSION;
-    private int intermissionTickCounter = 90;
-
-    private int totalCharsTyped = 0;
-    private long totalGameTicks = 0;
+    private final WaveManager waveManager;
+    private final EnemyManager enemyManager;
+    private final TypingManager typingManager;
+    private final GameStats gameStats;
+    private final LeaderboardManager leaderboardManager;
+    
+    public static final int GAME_SPEED_MS = 16;
+    public static final int MAX_NAME_LENGTH = 10;
 
     public GameModel(int gameWidth, int gameHeight) {
-        this.gameWidth = gameWidth;
-        this.gameHeight = gameHeight;
+        this.waveManager = new WaveManager();
+        this.enemyManager = new EnemyManager(gameWidth, gameHeight);
+        this.typingManager = new TypingManager();
+        this.gameStats = new GameStats();
+        this.leaderboardManager = new LeaderboardManager();
     }
 
-    public ArrayList<Word> getWords() {
-        return words;
+    public void startNewGame() {
+        score = 0;
+        lives = 5;
+        playerName = "";
+        gameState = GameState.PLAYING;
+        waveManager.reset();
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
+        gameStats.reset();
+    }
+
+    public void togglePause() {
+        if (gameState == GameState.PLAYING) {
+            gameState = GameState.PAUSED;
+        } else if (gameState == GameState.PAUSED) {
+            gameState = GameState.PLAYING;
+        }
+    }
+
+    public void returnToMenu() {
+        gameState = GameState.MAIN_MENU;
+        enemyManager.getEnemies().clear();
+        typingManager.reset();
+    }
+
+    private void loseLife() {
+        lives--;
+        if (lives <= 0) {
+            if (leaderboardManager.isHighScore(score)) {
+                gameState = GameState.ENTERING_NAME;
+            } else {
+                gameState = GameState.GAME_OVER;
+            }
+        }
+    }
+
+    public void appendToPlayerName(char c) {
+        if (playerName.length() < MAX_NAME_LENGTH && Character.isLetterOrDigit(c)) {
+            playerName += Character.toUpperCase(c);
+        }
+    }
+
+    public void backspacePlayerName() {
+        if (playerName.length() > 0) {
+            playerName = playerName.substring(0, playerName.length() - 1);
+        }
+    }
+
+    public void submitHighScore() {
+        if (playerName.isEmpty()) {
+            playerName = "PLAYER";
+        }
+        leaderboardManager.addHighScore(playerName, score, waveManager.getWaveNumber(), gameStats.getMaxWPM());
+        gameState = GameState.GAME_OVER;
+    }
+
+    public void updateGameState() {
+        if (gameState != GameState.PLAYING) return;
+
+        for (Enemy enemy : enemyManager.getEnemies()) {
+            enemy.updateAnimation();
+        }
+
+        if (waveManager.getWaveState() != WaveState.INTERMISSION) {
+            gameStats.incrementGameTicks();
+        }
+
+        if (waveManager.update()) {
+            score += 100;
+        }
+
+        switch (waveManager.getWaveState()) {
+            case SPAWNING:
+                if (waveManager.canSpawnEnemy()) {
+                    if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance(), waveManager.getWaveSpeedPixels())) {
+                        waveManager.notifyEnemySpawned();
+                    }
+                }
+                updateAndCheckLostEnemies();
+                break;
+                
+            case WAITING_FOR_CLEAR:
+                updateAndCheckLostEnemies();
+                if (enemyManager.isEmpty()) {
+                    waveManager.startIntermission();
+                }
+                break;
+                
+            case INTERMISSION:
+                break;
+        }
+    }
+
+    private void updateAndCheckLostEnemies() {
+        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies();
+        for (Enemy lostEnemy : lostEnemies) {
+            loseLife();
+            typingManager.checkTargetLost(lostEnemy);
+        }
+    }
+
+    public void appendTypedCharacter(char c) {
+        if (gameState != GameState.PLAYING) return;
+        
+        Enemy preHitTarget = typingManager.getTargetEnemy();
+        TypingResult result = typingManager.handleKeyTyped(c, enemyManager.getEnemies());
+
+        if (result == TypingResult.HIT) {
+            gameStats.incrementCharsTyped(1);
+        } else if (result == TypingResult.DESTROYED) {
+            gameStats.incrementCharsTyped(1);
+            Enemy destroyedEnemy = (preHitTarget != null) ? preHitTarget : typingManager.getTargetEnemy();
+            if (destroyedEnemy != null) {
+                score += destroyedEnemy.originalText.length();
+                enemyManager.removeEnemy(destroyedEnemy);
+            }
+        }
+    }
+
+    public void backspaceTypedWord() {
+        if (gameState != GameState.PLAYING) return;
+        typingManager.handleBackspace();
     }
 
     public int getScore() {
@@ -52,147 +167,51 @@ public class GameModel {
         return lives;
     }
 
-    public String getCurrentTypedWord() {
-        return currentTypedWord;
+    public GameState getGameState() {
+        return gameState;
     }
 
     public boolean isGameOver() {
-        return isGameOver;
+        return gameState == GameState.GAME_OVER;
     }
 
-    public int getGameHeight() {
-        return gameHeight;
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public ArrayList<Enemy> getEnemies() {
+        return enemyManager.getEnemies();
+    }
+
+    public Enemy getTargetEnemy() {
+        return typingManager.getTargetEnemy();
+    }
+
+    public String getDisplayTypedWord() {
+        return typingManager.getDisplayTypedWord();
     }
 
     public int getWaveNumber() {
-        return waveNumber;
+        return waveManager.getWaveNumber();
     }
 
     public WaveState getWaveState() {
-        return waveState;
+        return waveManager.getWaveState();
     }
 
     public int getIntermissionTickCounter() {
-        return intermissionTickCounter;
+        return waveManager.getIntermissionTickCounter();
     }
 
     public int getWPM() {
-        if (totalGameTicks == 0) {
-            return 0;
-        }
-        
-        double totalMinutes = (totalGameTicks * GAME_SPEED_MS) / 60000.0;
-
-        if (totalMinutes == 0) {
-            return 0;
-        }
-
-        double totalWords = totalCharsTyped / 5.0;
-        
-        return (int) (totalWords / totalMinutes);
+        return gameStats.getWPM();
     }
 
-    private void startNextWave() {
-        waveNumber++;
-        score += 100;
-        wordsLeftToSpawn = 5 + (waveNumber * 2);
-        
-        waveSpeedPixels = baseWordSpeed + (waveNumber / 6);
-        waveSpawnChance = Math.max(20, baseSpawnChance - (waveNumber * 5));
-        
-        waveState = WaveState.SPAWNING;
+    public int getMaxWPM() {
+        return gameStats.getMaxWPM();
     }
 
-    public void trySpawnWord() {
-        if (waveState != WaveState.SPAWNING || wordsLeftToSpawn <= 0) {
-            return;
-        }
-
-        if (random.nextInt(waveSpawnChance) == 0) {
-            String text = WORD_LIST[random.nextInt(WORD_LIST.length)];
-            int wordWidth = text.length() * 10; 
-            int x = random.nextInt(Math.max(10, gameWidth - wordWidth - 20)) + 10;
-            
-            words.add(new Word(text, x, 0));
-            wordsLeftToSpawn--;
-
-            if (wordsLeftToSpawn <= 0) {
-                waveState = WaveState.WAITING_FOR_CLEAR;
-            }
-        }
-    }
-
-    
-    public void updateWords() {
-        if (isGameOver) return;
-        
-        Iterator<Word> iter = words.iterator();
-        while (iter.hasNext()) {
-            Word word = iter.next();
-            word.y += waveSpeedPixels;
-            
-            if (word.y > gameHeight) {
-                iter.remove();
-                lives--;
-                if (lives <= 0) {
-                    isGameOver = true;
-                }
-            }
-        }
-    }
-
-    public void updateGameState() {
-        if (isGameOver) return;
-
-        switch (waveState) {
-            case SPAWNING:
-                totalGameTicks++;
-                trySpawnWord();
-                updateWords();
-                break;
-            case WAITING_FOR_CLEAR:
-                totalGameTicks++;
-                updateWords();
-                if (words.isEmpty()) {
-                    waveState = WaveState.INTERMISSION;
-                    intermissionTickCounter = INTERMISSION_TICKS;
-                }
-                break;
-            case INTERMISSION:
-                intermissionTickCounter--;
-                if (intermissionTickCounter <= 0) {
-                    startNextWave();
-                }
-                break;
-        }
-    }
-
-    public void submitTypedWord() {
-        if (currentTypedWord.isEmpty()) return;
-        
-        Iterator<Word> iter = words.iterator();
-        while (iter.hasNext()) {
-            Word word = iter.next();
-            if (word.text.equals(currentTypedWord)) {
-                iter.remove();
-                score += word.text.length();
-                totalCharsTyped += currentTypedWord.length();
-                currentTypedWord = "";
-                return;
-            }
-        }
-    }
-
-    public void appendTypedCharacter(char c) {
-        currentTypedWord += c;
-        submitTypedWord();
-    }
-
-    public void backspaceTypedWord() {
-        if (currentTypedWord.length() > 0) {
-            currentTypedWord = currentTypedWord.substring(0, currentTypedWord.length() - 1);
-        }
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
 }
-
-
