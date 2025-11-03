@@ -2,6 +2,8 @@ package Manager;
 
 import Entity.Enemy.Enemy;
 import Entity.Enemy.OrcEnemy;
+import Entity.Enemy.ZigZagEnemy;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -42,6 +44,7 @@ public class EnemyManager {
                 System.err.println("Warning: Orc sprites not loaded. Cannot spawn enemies.");
                 return false;
             }
+
             
             String text = ORC_WORDS[random.nextInt(ORC_WORDS.length)];
             int wordWidth = text.length() * 10; 
@@ -51,7 +54,13 @@ public class EnemyManager {
             int maxSpeed = (int)(baseSpeed * 1.3) + 1;
             int speedVariation = random.nextInt(maxSpeed - minSpeed) + minSpeed;
             
-            Enemy newEnemy = new OrcEnemy(text, x, 40, speedVariation);
+            Enemy newEnemy;
+            int enemyType = random.nextInt()%2;
+            switch (enemyType) {
+                case 0: newEnemy = new OrcEnemy(text, x, 40, speedVariation); break;
+                case 1: newEnemy = new ZigZagEnemy(text, x, 40, speedVariation); break;
+                default: newEnemy = new OrcEnemy(text, x, 40, speedVariation);
+            }
             enemies.add(newEnemy);
             return true;
         }
@@ -63,9 +72,16 @@ public class EnemyManager {
         Iterator<Enemy> iter = enemies.iterator();
         
         while (iter.hasNext()) {
-            Enemy enemy = iter.next();
-            enemy.y += enemy.speed;
             
+            Enemy enemy = iter.next();
+            enemy.y += enemy.speedy;
+            enemy.x += enemy.speedx;
+            if(enemy.x>enemy.MAX_WIDTH|| enemy.x<enemy.MIN_WIDTH){
+                enemy.speedx = -enemy.speedx;
+                enemy.MAX_WIDTH = random.nextInt(gameWidth/2,gameWidth-40);
+                enemy.MIN_WIDTH = random.nextInt(10,gameWidth/2);
+            }
+                     
             if (enemy.y > gameHeight) {
                 iter.remove();
                 lostEnemies.add(enemy);
