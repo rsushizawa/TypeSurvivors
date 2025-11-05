@@ -6,9 +6,9 @@ import Animation.SpriteSheetLoader;
 import GameObject.AnimatedGameObject;
 
 public class Player extends AnimatedGameObject {
-    private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png";
-    private static final int SPRITE_WIDTH = 64;
-    private static final int SPRITE_HEIGHT = 64;
+    private static final String SPRITE_PATH = "player_spritesheet.png";
+    private static final int SPRITE_WIDTH = 32;
+    private static final int SPRITE_HEIGHT = 32;
     private static final int IDLE_ROW = 0;
     private static final int ANIMATION_SPEED = 8;
     

@@ -6,12 +6,12 @@ import View.GameView;
 
 public class TypeSurvivors {
 
-    public static int gameWidth = 600;
-    public static int gameHeight = 900;
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             
+            int gameWidth = 600;
+            int gameHeight = 900;
+
             GameModel model = new GameModel(gameWidth, gameHeight);
 
             GameView view = new GameView(model, gameWidth, gameHeight);

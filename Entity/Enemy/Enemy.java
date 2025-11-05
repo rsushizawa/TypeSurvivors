@@ -7,10 +7,7 @@ public class Enemy {
     public String text;
     public final String originalText;
     public int x, y;
-    public int speedx;
-    public int speedy;
-    public int MAX_WIDTH = 540;
-    public int MIN_WIDTH = 0;
+    public int speed;
 
     protected AnimatedSprite animatedSprite;
 
@@ -19,8 +16,7 @@ public class Enemy {
         this.originalText = text;
         this.x = x;
         this.y = y;
-        this.speedy = 1; 
-        this.speedx = 1;
+        this.speed = 1; 
         this.animatedSprite = null; 
     }
     
@@ -30,13 +26,8 @@ public class Enemy {
         this.originalText = text;
         this.x = x;
         this.y = y;
-        this.speedy = 1;
-        this.speedx = 1;
+        this.speed = 1;
         this.animatedSprite = new AnimatedSprite(sprites, animationSpeed, true);
-    }
-
-    public void update(){
-        this.y += this.speedy;
     }
 
     public void updateAnimation() {
