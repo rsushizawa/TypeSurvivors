@@ -35,6 +35,10 @@ public class Enemy {
         this.animatedSprite = new AnimatedSprite(sprites, animationSpeed, true);
     }
 
+    public void update(){
+        this.y += this.speedy;
+    }
+
     public void updateAnimation() {
         if (animatedSprite != null) {
             animatedSprite.updateAnimation();
