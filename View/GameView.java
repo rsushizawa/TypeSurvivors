@@ -230,7 +230,7 @@ public class GameView {
                         } else {
                             g.setColor(Color.WHITE);
                         }
-                        g.drawString(enemy.text, centeredX, enemy.y + 5);
+                        g.drawString(enemy.text, centeredX, enemy.y + 15);
                     }
                 } else {
                     g.setFont(new Font("Monospaced", Font.PLAIN, 20));
