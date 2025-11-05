@@ -3,7 +3,7 @@ package Entity.Enemy;
 import Animation.SpriteSheetLoader;
 import java.awt.image.BufferedImage;
 
-public class OrcEnemy extends Enemy {
+public class ZigZagEnemy extends Enemy {
     
     private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png"; 
     private static final int SPRITE_WIDTH = 64; 
@@ -30,7 +30,7 @@ public class OrcEnemy extends Enemy {
         );
     }
 
-    public OrcEnemy(String text, int x, int y, int speed) {
+    public ZigZagEnemy(String text, int x, int y, int speed) {
         super(text, x, y, orcSprites, ANIMATION_SPEED);
         this.speedy = speed;
         this.speedx = speed;
