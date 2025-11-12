@@ -1,5 +1,6 @@
 package Manager;
 
+import Audio.AudioManager;
 import Data.WaveState;
 
 public class WaveManager {
@@ -67,6 +68,12 @@ public class WaveManager {
         waveSpawnChance = Math.max(20, baseSpawnChance - (waveNumber * 5));
         
         waveState = WaveState.SPAWNING;
+
+        if (waveNumber % 5 == 0) {
+            AudioManager.playBossMusic();
+        } else {
+            AudioManager.playGameMusic();
+        }
     }
 
     public void startIntermission() {

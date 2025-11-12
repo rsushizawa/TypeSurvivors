@@ -50,11 +50,6 @@ public class EnemyManager {
         }
     }
 
-    /**
-     * Gets a random word based on the current wave number.
-     * @param waveNumber The current wave number.
-     * @return A word.
-     */
     private String getWordForWave(int waveNumber) {
         int minLength = 4 + (waveNumber / 3);
         int maxLength = 6 + (waveNumber / 2);
