@@ -11,11 +11,10 @@ public class AranhaEnemy extends Enemy {
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;
     private static final int ANIMATION_SPEED = 8;
-    public int MAX_WIDTH = 600;
-    public int MIN_WIDTH = 0;
 
-    private final int amplitude;
-    private final int v_deslocamento;
+    private final double initialWorldX;
+    private final double worldSpeedX;
+    private static final double SINE_AMPLITUDE = 100.0;
     
     private static BufferedImage[] orcSprites = null;
     
@@ -33,12 +32,10 @@ public class AranhaEnemy extends Enemy {
         );
     }
 
-    public AranhaEnemy(String text, int x, int y, int speed) {
-        super(text, x, y, orcSprites, ANIMATION_SPEED);
-        this.speedy = speed;
-        this.speedx = speed;
-        this.amplitude = 2;
-        this.v_deslocamento = 1;
+    public AranhaEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
+        super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
+        this.initialWorldX = worldX;
+        this.worldSpeedX = worldSpeedX;
     }
     
     public static boolean spritesLoaded() {
@@ -47,10 +44,11 @@ public class AranhaEnemy extends Enemy {
 
     @Override
     public void update(){
-        double cos = Math.cos((y*(Math.PI/180))%(Math.PI));
-        if(cos < 0){
-            cos = cos*(-1);
-        }
-        this.y += this.speedy * amplitude * cos + v_deslocamento;
+        this.z += this.zSpeed;
+        
+        double angle = (this.z * this.worldSpeedX * 0.1 * Math.PI); 
+        this.worldX = this.initialWorldX + (Math.sin(angle) * SINE_AMPLITUDE);
+        
+        updatePerspective();
     }
 }

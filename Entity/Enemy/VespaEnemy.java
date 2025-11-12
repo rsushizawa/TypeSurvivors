@@ -12,8 +12,8 @@ public class VespaEnemy extends Enemy {
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;
     private static final int ANIMATION_SPEED = 8;
-    public int MAX_WIDTH = 600;
-    public int MIN_WIDTH = 0;
+
+    private double worldSpeedX;
     private static final Random random = new Random();
     
     private static BufferedImage[] orcSprites = null;
@@ -32,10 +32,16 @@ public class VespaEnemy extends Enemy {
         );
     }
 
-    public VespaEnemy(String text, int x, int y, int speed) {
-        super(text, x, y, orcSprites, ANIMATION_SPEED);
-        this.speedy = speed;
-        this.speedx = speed;
+    /**
+     * Constructor for VespaEnemy (Zig-zag movement).
+     * @param text The word for this enemy.
+     * @param worldX The initial horizontal "track" position.
+     * @param zSpeed The speed at which z increases (0.0 to 1.0) per frame.
+     * @param worldSpeedX The horizontal speed.
+     */
+    public VespaEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
+        super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
+        this.worldSpeedX = worldSpeedX;
     }
     
     public static boolean spritesLoaded() {
@@ -44,17 +50,20 @@ public class VespaEnemy extends Enemy {
 
     @Override
     public void update(){
-        this.y += this.speedy;
-        this.x += this.speedx;
-        if(this.x>this.MAX_WIDTH|| this.x<this.MIN_WIDTH){
-            this.speedx = -this.speedx;
-            if(this.x>this.MAX_WIDTH){
-                this.MIN_WIDTH = random.nextInt(10,600/2);
+        this.z += this.zSpeed;
+        
+        this.worldX += this.worldSpeedX;
+        
+        if(this.worldX > this.MAX_WIDTH || this.worldX < this.MIN_WIDTH){
+            this.worldSpeedX = -this.worldSpeedX;
+            if(this.worldX > this.MAX_WIDTH){
+                this.MIN_WIDTH = random.nextInt(10, 600 / 2);
             }
             else{
-                this.MAX_WIDTH = random.nextInt(600/2,600-40);
+                this.MAX_WIDTH = random.nextInt(600 / 2, 600 - 40);
             }
-            
         }
+        
+        updatePerspective();
     }
 }

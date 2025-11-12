@@ -2,24 +2,25 @@ package Manager;
 
 import Entity.Enemy.Enemy;
 import Entity.Enemy.AranhaEnemy;
+import Entity.Enemy.LouvaDeusEnemy;
+import Entity.Enemy.OrcEnemy;
 import Entity.Enemy.VespaEnemy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
 public class EnemyManager {
 
+    private static final ArrayList<ArrayList<String>> WORDS_BY_LENGTH = new ArrayList<>();
+    private static final int MAX_WORD_LENGTH_SUPPORTED = 30;
+
     static{
         readCSV();
     }
-
-    private static String[] ORC_WORDS;
-
 
     private final ArrayList<Enemy> enemies = new ArrayList<>();
     private final Random random = new Random();
@@ -32,19 +33,69 @@ public class EnemyManager {
     }
 
     public static void readCSV(){
+        for (int i = 0; i < MAX_WORD_LENGTH_SUPPORTED; i++) {
+            WORDS_BY_LENGTH.add(new ArrayList<String>());
+        }
+
         String csvFile = "Assets/dict-correto.csv";
-        List<String> data = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File(csvFile))) {
             while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                data.add(line);
+                String line = scanner.nextLine().trim().toLowerCase();
+                if (!line.isEmpty() && line.length() < MAX_WORD_LENGTH_SUPPORTED && line.matches("^[a-z]+$")) {
+                    WORDS_BY_LENGTH.get(line.length()).add(line);
+                }
             }
-            String[] newArray = data.toArray(new String[0]);
-            ORC_WORDS = newArray;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Gets a random word based on the current wave number.
+     * @param waveNumber The current wave number.
+     * @return A word.
+     */
+    private String getWordForWave(int waveNumber) {
+        int minLength = 4 + (waveNumber / 3);
+        int maxLength = 6 + (waveNumber / 2);
+        
+        maxLength = Math.min(maxLength, MAX_WORD_LENGTH_SUPPORTED - 1);
+        minLength = Math.min(minLength, maxLength);
+
+        int wordLength = random.nextInt((maxLength - minLength) + 1) + minLength;
+        
+        int originalLength = wordLength;
+        int offset = 0;
+        while (true) {
+            if (wordLength < MAX_WORD_LENGTH_SUPPORTED && !WORDS_BY_LENGTH.get(wordLength).isEmpty()) {
+                break;
+            }
+            
+            offset++;
+            wordLength = originalLength + offset;
+            if (wordLength < MAX_WORD_LENGTH_SUPPORTED && !WORDS_BY_LENGTH.get(wordLength).isEmpty()) {
+                break;
+            }
+
+            wordLength = originalLength - offset;
+            if (wordLength > 1 && !WORDS_BY_LENGTH.get(wordLength).isEmpty()) {
+                break;
+            }
+
+            if (offset > 5) {
+                wordLength = 3;
+                break;
+            }
+        }
+        
+        if (WORDS_BY_LENGTH.get(wordLength).isEmpty()) {
+            return "error";
+        }
+
+        ArrayList<String> wordList = WORDS_BY_LENGTH.get(wordLength);
+        return wordList.get(random.nextInt(wordList.size()));
+    }
+
 
     public ArrayList<Enemy> getEnemies() {
         return enemies;
@@ -58,28 +109,41 @@ public class EnemyManager {
         enemies.remove(enemy);
     }
 
-    public boolean trySpawnEnemy(int spawnChance, int baseSpeed) {
+    public boolean trySpawnEnemy(int spawnChance, int baseSpeedPixels, int waveNumber) {
         if (random.nextInt(spawnChance) == 0) {
-            if (!AranhaEnemy.spritesLoaded()) {
+            if (!OrcEnemy.spritesLoaded()) {
                 System.err.println("Warning: Orc sprites not loaded. Cannot spawn enemies.");
                 return false;
             }
 
+            String text = getWordForWave(waveNumber);
             
-            String text = ORC_WORDS[random.nextInt(ORC_WORDS.length)];
-            int wordWidth = text.length() * 10; 
-            int x = random.nextInt(Math.max(10, gameWidth - wordWidth - 20)) + 10;
+            double worldX = random.nextInt(gameWidth - 100) + 50.0;
             
-            int minSpeed = Math.max(1, (int)(baseSpeed * 0.7));
-            int maxSpeed = (int)(baseSpeed * 1.3) + 1;
-            int speedVariation = random.nextInt(maxSpeed - minSpeed) + minSpeed;
+            int minSpeed = Math.max(1, (int)(baseSpeedPixels * 0.7));
+            int maxSpeed = (int)(baseSpeedPixels * 1.3) + 1;
+            int pixelSpeed = random.nextInt(maxSpeed - minSpeed) + minSpeed;
             
+            int effectiveGameHeight = Enemy.PLAYER_Y_LINE - Enemy.HORIZON_Y;
+            double zSpeed = (double)pixelSpeed / effectiveGameHeight;
+            
+            double worldSpeedX = (random.nextDouble() * 4.0 + 2.0) * (random.nextBoolean() ? 1 : -1);
+
             Enemy newEnemy;
-            int enemyType = random.nextInt()%2;
+            int enemyType = random.nextInt(3);
+            
             switch (enemyType) {
-                case 0: newEnemy = new AranhaEnemy(text, x, 40, speedVariation); System.out.println("Aranha");break;
-                case 1: newEnemy = new VespaEnemy(text, x, 40, speedVariation); System.out.println("Vespa"); break;
-                default: newEnemy = new AranhaEnemy(text, x, 40, speedVariation);
+                case 0: 
+                    newEnemy = new OrcEnemy(text, worldX, zSpeed, 0);
+                    break;
+                case 1: 
+                    newEnemy = new AranhaEnemy(text, worldX, zSpeed, pixelSpeed * 2.0);
+                    break;
+                case 2: 
+                    newEnemy = new LouvaDeusEnemy(text, worldX, zSpeed, worldSpeedX);
+                default:
+                    newEnemy = new VespaEnemy(text, worldX, zSpeed, worldSpeedX); 
+                    break;
             }
             enemies.add(newEnemy);
             return true;
@@ -92,12 +156,10 @@ public class EnemyManager {
         Iterator<Enemy> iter = enemies.iterator();
         
         while (iter.hasNext()) {
-            
             Enemy enemy = iter.next();
             enemy.update();
-
                      
-            if (enemy.y > gameHeight) {
+            if (enemy.z >= 1.0) {
                 iter.remove();
                 lostEnemies.add(enemy);
             }

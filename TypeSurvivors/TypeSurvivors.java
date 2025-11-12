@@ -1,3 +1,5 @@
+package TypeSurvivors;
+
 import javax.swing.SwingUtilities;
 
 import Controller.GameController;
