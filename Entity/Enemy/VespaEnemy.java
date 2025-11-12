@@ -32,13 +32,6 @@ public class VespaEnemy extends Enemy {
         );
     }
 
-    /**
-     * Constructor for VespaEnemy (Zig-zag movement).
-     * @param text The word for this enemy.
-     * @param worldX The initial horizontal "track" position.
-     * @param zSpeed The speed at which z increases (0.0 to 1.0) per frame.
-     * @param worldSpeedX The horizontal speed.
-     */
     public VespaEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
         super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
         this.worldSpeedX = worldSpeedX;
@@ -57,10 +50,10 @@ public class VespaEnemy extends Enemy {
         if(this.worldX > this.MAX_WIDTH || this.worldX < this.MIN_WIDTH){
             this.worldSpeedX = -this.worldSpeedX;
             if(this.worldX > this.MAX_WIDTH){
-                this.MIN_WIDTH = random.nextInt(10, 600 / 2);
+                this.MIN_WIDTH = random.nextInt(10, 300);
             }
             else{
-                this.MAX_WIDTH = random.nextInt(600 / 2, 600 - 40);
+                this.MAX_WIDTH = random.nextInt(300, 500);
             }
         }
         

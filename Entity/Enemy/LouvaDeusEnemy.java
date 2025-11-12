@@ -31,14 +31,6 @@ public class LouvaDeusEnemy extends Enemy {
             SPRITE_HEIGHT
         );
     }
-
-    /**
-     * Constructor for LouvaDeusEnemy (Zig-zag movement).
-     * @param text The word for this enemy.
-     * @param worldX The initial horizontal "track" position.
-     * @param zSpeed The speed at which z increases (0.0 to 1.0) per frame.
-     * @param worldSpeedX The horizontal speed.
-     */
     public LouvaDeusEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
         super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
         this.worldSpeedX = worldSpeedX;
