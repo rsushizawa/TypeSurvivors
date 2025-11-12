@@ -11,8 +11,6 @@ public class OrcEnemy extends Enemy {
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;
     private static final int ANIMATION_SPEED = 8;
-    public int MAX_WIDTH = 600;
-    public int MIN_WIDTH = 0;
     
     private static BufferedImage[] orcSprites = null;
     
@@ -30,12 +28,23 @@ public class OrcEnemy extends Enemy {
         );
     }
 
-    public OrcEnemy(String text, int x, int y, int speed) {
-        super(text, x, y, orcSprites, ANIMATION_SPEED);
-        this.speedy = speed;
-        this.speedx = speed;
+    /**
+     * Constructor for an OrcEnemy that moves straight.
+     * @param text The word for this enemy.
+     * @param worldX The horizontal "track" this enemy spawns on.
+     * @param zSpeed The speed at which z increases (0.0 to 1.0) per frame.
+     */
+    public OrcEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
+        super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
     }
     
+    @Override
+    public void update() {
+        this.z += this.zSpeed;
+        
+        updatePerspective();
+    }
+
     public static boolean spritesLoaded() {
         return orcSprites != null;
     }

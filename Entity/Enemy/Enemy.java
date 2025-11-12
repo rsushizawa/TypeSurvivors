@@ -6,38 +6,57 @@ import java.awt.image.BufferedImage;
 public class Enemy {
     public String text;
     public final String originalText;
-    public int x, y;
+    public int x, y; // Screen coordinates
+    public double z; // Depth (0.0 = horizon, 1.0 = player)
+    public double zSpeed; // Speed moving towards player (z per frame)
+    public double worldX; // "Track" position on the horizontal axis
+    
     public int speedx;
     public int speedy;
+    
     public int MAX_WIDTH = 540;
     public int MIN_WIDTH = 0;
 
     protected AnimatedSprite animatedSprite;
+    protected int spriteWidth;
+    protected int spriteHeight;
+    protected double scale;
 
-    public Enemy(String text, int x, int y) {
+    public static final int HORIZON_Y = 50; // Y-coordinate of the vanishing point
+    public static final int VANISHING_POINT_X = 300; // X-coordinate of the vanishing point
+    public static final double MIN_SCALE = 0.5; // Scale at z = 0.0 (Was 0.1)
+    public static final double MAX_SCALE = 2; // Scale at z = 1.0 (New Constant)
+    public static final int PLAYER_Y_LINE = 850; // The Y-line enemies are moving towards
+
+    protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
         this.text = text;
         this.originalText = text;
-        this.x = x;
-        this.y = y;
-        this.speedy = 1; 
-        this.speedx = 1;
-        this.animatedSprite = null; 
-    }
-    
-
-    protected Enemy(String text, int x, int y, BufferedImage[] sprites, int animationSpeed) {
-        this.text = text;
-        this.originalText = text;
-        this.x = x;
-        this.y = y;
-        this.speedy = 1;
-        this.speedx = 1;
+        this.worldX = worldX;
+        this.z = 0.0;
+        this.zSpeed = zSpeed;
+        
         this.animatedSprite = new AnimatedSprite(sprites, animationSpeed, true);
+        
+        this.spriteWidth = getSpriteWidth();
+        this.spriteHeight = getSpriteHeight();
+        
+        updatePerspective();
+    }
+
+
+    public void updatePerspective() {
+        this.scale = MIN_SCALE + this.z * (MAX_SCALE - MIN_SCALE);
+        
+        this.y = (int)(HORIZON_Y + this.z * (PLAYER_Y_LINE - HORIZON_Y));
+        
+        this.x = (int)(VANISHING_POINT_X + (this.worldX - VANISHING_POINT_X) * this.scale);
     }
 
     public void update(){
-        this.y += this.speedy;
+        this.z += this.zSpeed;
+        updatePerspective();
     }
+
 
     public void updateAnimation() {
         if (animatedSprite != null) {
@@ -59,5 +78,17 @@ public class Enemy {
 
     public int getSpriteHeight() {
         return animatedSprite != null ? animatedSprite.getSpriteHeight() : 0;
+    }
+
+    public double getScale() {
+        return this.scale;
+    }
+
+    public int getScaledWidth() {
+        return (int)(this.spriteWidth * this.scale);
+    }
+
+    public int getScaledHeight() {
+        return (int)(this.spriteHeight * this.scale);
     }
 }

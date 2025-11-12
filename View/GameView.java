@@ -8,6 +8,8 @@ import java.util.List;
 
 import Model.GameModel;
 import Entity.Enemy.Enemy;
+import Entity.Player.Player;
+import Entity.Projectile.Projectile;
 import Data.WaveState;
 import Data.HighScoreEntry;
 
@@ -17,13 +19,16 @@ public class GameView {
     private final GamePanel gamePanel;
     private final GameModel model;
 
+    private Image backgroundImage;
+
     public GameView(GameModel model, int width, int height) {
         this.model = model;
         
-        frame = new JFrame("TypoJam MVC");
+        frame = new JFrame("Type Survivors");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(width, height);
         frame.setResizable(false);
+
 
         gamePanel = new GamePanel();
         frame.add(gamePanel);
@@ -54,8 +59,14 @@ public class GameView {
             
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             
-            setBackground(Color.BLACK);
+            if (backgroundImage != null) {
+                g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                g2d.setColor(Color.BLACK);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
 
             switch (model.getGameState()) {
                 case MAIN_MENU:
@@ -66,13 +77,15 @@ public class GameView {
                     drawWaveStatus(g2d);
                     break;
                 case PAUSED:
-                    drawGame(g2d);
+                    drawGame(g2d); 
                     drawPauseOverlay(g2d);
                     break;
                 case ENTERING_NAME:
+                    drawGame(g2d);
                     drawNameEntry(g2d);
                     break;
                 case GAME_OVER:
+                    drawGame(g2d);
                     drawGameOver(g2d);
                     break;
             }
@@ -99,8 +112,9 @@ public class GameView {
 
             String[] instructions = {
                 "How to Play:",
-                "- Type the letters of falling words",
-                "- Complete words before they reach the bottom",
+                "- Type the letters of approaching enemies",
+                "- Each letter fires a projectile",
+                "- Complete words before they reach you",
                 "- Press BACKSPACE to cancel current word",
                 "- Press ESC to pause the game"
             };
@@ -210,29 +224,50 @@ public class GameView {
         private void drawGame(Graphics2D g) {
             Enemy target = model.getTargetEnemy();
 
-            for (Enemy enemy : model.getEnemies()) {
+            g.setColor(Color.ORANGE);
+            for (Projectile p : model.getProjectiles()) {
+                g.fillOval(p.x - 3, p.y - 3, 6, 6);
+            }
+
+            List<Enemy> enemies = model.getEnemies();
+            enemies.sort((e1, e2) -> Double.compare(e1.z, e2.z));
+
+            for (Enemy enemy : enemies) {
                 if (enemy.hasSprites()) {
                     BufferedImage sprite = enemy.getCurrentSprite();
                     if (sprite != null) {
-                        g.drawImage(sprite, enemy.x, enemy.y - 32, null);
+                        int scaledWidth = enemy.getScaledWidth();
+                        int scaledHeight = enemy.getScaledHeight();
                         
-                        g.setFont(new Font("Monospaced", Font.BOLD, 16));
+                        // Draw sprite centered on its X, with its base at Y
+                        int drawX = enemy.x - (scaledWidth / 2);
+                        int drawY = enemy.y - scaledHeight;
+                        
+                        g.drawImage(sprite, drawX, drawY, scaledWidth, scaledHeight, null);
+                        
+                        // Draw text below the sprite
+                        float fontSize = (float)(16.0 * enemy.getScale());
+                        if (fontSize < 8) fontSize = 8; // Don't let font get too small
+                        
+                        g.setFont(new Font("Monospaced", Font.BOLD, (int)fontSize));
                         FontMetrics fm = g.getFontMetrics();
                         int textWidth = fm.stringWidth(enemy.text);
-                        int spriteWidth = enemy.getSpriteWidth();
-                        int centeredX = enemy.x + (spriteWidth - textWidth) / 2;
+                        int centeredX = enemy.x - (textWidth / 2);
+                        int textY = enemy.y + 15; // Position text below the base
                         
-                        g.setColor(Color.BLACK);
-                        g.drawString(enemy.text, centeredX + 1, enemy.y + 6);
+                        g.setColor(Color.BLACK); // Text shadow
+                        g.drawString(enemy.text, centeredX + 1, textY + 1);
                         
                         if (enemy == target) {
                             g.setColor(Color.RED);
                         } else {
                             g.setColor(Color.WHITE);
                         }
-                        g.drawString(enemy.text, centeredX, enemy.y + 15);
+                        g.drawString(enemy.text, centeredX, textY);
                     }
-                } else {
+                }
+                // Fallback for no sprites (though all enemies have them now)
+                else { 
                     g.setFont(new Font("Monospaced", Font.PLAIN, 20));
                     if (enemy == target) {
                         g.setColor(Color.RED);
@@ -242,10 +277,24 @@ public class GameView {
                     g.drawString(enemy.text, enemy.x, enemy.y);
                 }
             }
+            
+            // Draw Player
+            Player player = model.getPlayer();
+            if (player != null && player.hasSprites()) {
+                g.drawImage(player.getCurrentSprite(), player.x, player.y, null);
+            }
 
-            g.setColor(Color.RED);
-            g.drawLine(0, getHeight() - 50, getWidth(), getHeight() - 50);
+            // Draw Red Line (Danger Zone)
+            g.setColor(new Color(255, 0, 0, 150));
+            g.setStroke(new BasicStroke(3));
+            g.drawLine(0, Enemy.PLAYER_Y_LINE, getWidth(), Enemy.PLAYER_Y_LINE);
+            g.setStroke(new BasicStroke(1));
 
+
+            // Draw UI (Typing, Stats)
+            g.setColor(new Color(0, 0, 0, 100)); // Semi-transparent bar for UI
+            g.fillRect(0, getHeight() - 50, getWidth(), 50);
+            
             g.setColor(Color.GREEN);
             g.setFont(new Font("Monospaced", Font.BOLD, 22));
             g.drawString("> " + model.getDisplayTypedWord(), 20, getHeight() - 20);
@@ -284,6 +333,9 @@ public class GameView {
         }
 
         private void drawGameOver(Graphics2D g) {
+            g.setColor(new Color(0, 0, 0, 200));
+            g.fillRect(0, 0, getWidth(), getHeight());
+            
             drawCenteredString(g, "GAME OVER", getHeight() / 2 - 100, Color.RED, Font.BOLD, 48);
             drawCenteredString(g, "Final Score: " + model.getScore(), getHeight() / 2 - 30, Color.WHITE, Font.BOLD, 24);
             drawCenteredString(g, "Wave Reached: " + model.getWaveNumber(), getHeight() / 2 + 10, Color.WHITE, Font.PLAIN, 20);

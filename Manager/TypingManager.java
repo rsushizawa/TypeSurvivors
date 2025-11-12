@@ -41,7 +41,6 @@ public class TypingManager {
         targetEnemy.text = targetEnemy.text.substring(1);
 
         if (targetEnemy.text.isEmpty()) {
-            resetTarget();
             return TypingResult.DESTROYED;
         } else {
             return TypingResult.HIT;
@@ -49,11 +48,15 @@ public class TypingManager {
     }
 
     public TypingResult handleKeyTyped(char c, ArrayList<Enemy> allEnemies) {
+        char lowerC = Character.toLowerCase(c); // Always compare in lowercase
+        
         if (targetEnemy == null) {
             Enemy bestMatch = null;
             for (Enemy enemy : allEnemies) {
-                if (enemy.text.startsWith(String.valueOf(c))) {
-                    if (bestMatch == null || enemy.y > bestMatch.y) {
+                // Check against lowercase original text
+                if (!enemy.text.isEmpty() && enemy.text.charAt(0) == lowerC) {
+                    // Find the "closest" enemy (highest Z value)
+                    if (bestMatch == null || enemy.z > bestMatch.z) {
                         bestMatch = enemy;
                     }
                 }
@@ -61,16 +64,22 @@ public class TypingManager {
 
             if (bestMatch != null) {
                 targetEnemy = bestMatch;
-                displayTypedWord = String.valueOf(c);
+                displayTypedWord = String.valueOf(lowerC);
                 return damageEnemy();
             } else {
                 return TypingResult.MISS;
             }
         } else {
-            if (targetEnemy.text.startsWith(String.valueOf(c))) {
-                displayTypedWord += c;
-                return damageEnemy();
+            if (!targetEnemy.text.isEmpty() && targetEnemy.text.charAt(0) == lowerC) {
+                displayTypedWord += lowerC;
+                TypingResult result = damageEnemy();
+                if (result == TypingResult.DESTROYED) {
+                    // Let GameModel handle removal, but clear the target for next keypress
+                    resetTarget(); 
+                }
+                return result;
             } else {
+                // Mistyped, so reset
                 resetTarget();
                 return TypingResult.MISS;
             }
