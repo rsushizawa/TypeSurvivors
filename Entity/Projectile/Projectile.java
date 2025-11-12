@@ -1,57 +1,41 @@
 package Entity.Projectile;
 
-import java.awt.image.BufferedImage;
+import GameObject.GameObject;
+import TypeSurvivors.TypeSurvivors;
 
-import Animation.SpriteSheetLoader;
-import GameObject.AnimatedGameObject;
-
-
-public class Projectile extends AnimatedGameObject {
-    private static BufferedImage[] fireballSprites = null;
+public class Projectile extends GameObject {
+    
     private int damage;
-    private int maxDistance;
-    private int traveledDistance;
-    
-    static {
-        loadProjectileSprites();
-    }
-    
-    private static void loadProjectileSprites() {
-        fireballSprites = SpriteSheetLoader.loadSpriteRow(
-            "fireball_spritesheet.png",
-            0,
-            4,
-            16,
-            16
-        );
-    }
+    private static final int PROJECTILE_SPEED = 15;
 
-    public Projectile(int x, int y, int velocityX, int velocityY, int damage) {
-        super(x, y, fireballSprites, 4, true); // Fast animation, looping
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
+    public Projectile(int x, int y, int targetX, int targetY, int damage) {
+        super(x, y);
+        
+        double dx = targetX - x;
+        double dy = targetY - y;
+        double magnitude = Math.sqrt(dx * dx + dy * dy);
+
+        if (magnitude > 0) {
+            this.velocityX = (int)((dx / magnitude) * PROJECTILE_SPEED);
+            this.velocityY = (int)((dy / magnitude) * PROJECTILE_SPEED);
+        } else {
+            this.velocityX = 0;
+            this.velocityY = -PROJECTILE_SPEED;
+        }
+
         this.damage = damage;
-        this.maxDistance = 500;
-        this.traveledDistance = 0;
     }
 
     @Override
     public void update() {
-        super.update();
+        super.updatePosition();
         
-        traveledDistance += Math.abs(velocityX) + Math.abs(velocityY);
-        
-        // Deactivate if traveled too far
-        if (traveledDistance >= maxDistance) {
+        if (y < 0 || y > TypeSurvivors.gameHeight || x < 0 || x > TypeSurvivors.gameWidth) {
             deactivate();
         }
     }
     
     public int getDamage() {
         return damage;
-    }
-    
-    public static boolean spritesLoaded() {
-        return fireballSprites != null;
     }
 }
