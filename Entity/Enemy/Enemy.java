@@ -22,11 +22,11 @@ public class Enemy {
     protected int spriteHeight;
     protected double scale;
 
-    public static final int HORIZON_Y = 50; // Y-coordinate of the vanishing point
-    public static final int VANISHING_POINT_X = 300; // X-coordinate of the vanishing point
-    public static final double MIN_SCALE = 0.5; // Scale at z = 0.0 (Was 0.1)
-    public static final double MAX_SCALE = 2; // Scale at z = 1.0 (New Constant)
-    public static final int PLAYER_Y_LINE = 850; // The Y-line enemies are moving towards
+    public static final int HORIZON_Y = 50;
+    public static final int VANISHING_POINT_X = 300; 
+    public static final double MIN_SCALE = 0.1; 
+    public static final double MAX_SCALE = 1.5;
+    public static final int PLAYER_Y_LINE = 1000; 
 
     protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
         this.text = text;

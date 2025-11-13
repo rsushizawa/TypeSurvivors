@@ -29,7 +29,7 @@ public class Player extends AnimatedGameObject {
     }
 
     public Player(int x, int y) {
-        super(x, y, idleSprites, ANIMATION_SPEED, true); // true = loop animation
+        super(x, y, idleSprites, ANIMATION_SPEED, true);
     }
 
     @Override

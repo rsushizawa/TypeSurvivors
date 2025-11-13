@@ -6,7 +6,7 @@ import TypeSurvivors.TypeSurvivors;
 public class Projectile extends GameObject {
     
     private int damage;
-    private static final int PROJECTILE_SPEED = 15;
+    private static final int PROJECTILE_SPEED = 30;
 
     public Projectile(int x, int y, int targetX, int targetY, int damage) {
         super(x, y);
