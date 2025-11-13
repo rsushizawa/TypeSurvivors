@@ -15,6 +15,8 @@ import Data.GameStats;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import Audio.AudioManager;
+
 public class GameModel {
 
     private int score = 0;
@@ -28,7 +30,6 @@ public class GameModel {
     private final GameStats gameStats;
     private final LeaderboardManager leaderboardManager;
     
-    // Player and Projectiles
     private final Player player;
     private final ArrayList<Projectile> projectiles;
     
@@ -42,8 +43,7 @@ public class GameModel {
         this.gameStats = new GameStats();
         this.leaderboardManager = new LeaderboardManager();
         
-        // Initialize Player and Projectiles
-        this.player = new Player(gameWidth / 2 - 32, gameHeight - 120); // 32 is half sprite width
+        this.player = new Player(gameWidth / 2 - 32, gameHeight - 120);
         this.projectiles = new ArrayList<>();
     }
 
@@ -72,11 +72,13 @@ public class GameModel {
         enemyManager.getEnemies().clear();
         projectiles.clear();
         typingManager.reset();
+        AudioManager.playMainMenuMusic();
     }
 
     private void loseLife() {
         lives--;
         if (lives <= 0) {
+            AudioManager.stopAllMusic();
             if (leaderboardManager.isHighScore(score)) {
                 gameState = GameState.ENTERING_NAME;
             } else {
@@ -108,10 +110,8 @@ public class GameModel {
     public void updateGameState() {
         if (gameState != GameState.PLAYING) return;
 
-        // Update player
         player.update();
 
-        // Update all projectiles
         Iterator<Projectile> projIter = projectiles.iterator();
         while (projIter.hasNext()) {
             Projectile p = projIter.next();
@@ -121,7 +121,6 @@ public class GameModel {
             }
         }
         
-        // Update all enemies
         for (Enemy enemy : enemyManager.getEnemies()) {
             enemy.updateAnimation();
         }
@@ -137,7 +136,6 @@ public class GameModel {
         switch (waveManager.getWaveState()) {
             case SPAWNING:
                 if (waveManager.canSpawnEnemy()) {
-                    // Pass wave number for difficulty scaling
                     if (enemyManager.trySpawnEnemy(waveManager.getWaveSpawnChance(), waveManager.getWaveSpeedPixels(), waveManager.getWaveNumber())) {
                         waveManager.notifyEnemySpawned();
                     }
@@ -153,7 +151,6 @@ public class GameModel {
                 break;
                 
             case INTERMISSION:
-                // Clear any remaining projectiles
                 projectiles.clear();
                 break;
         }
@@ -166,45 +163,37 @@ public class GameModel {
             typingManager.checkTargetLost(lostEnemy);
         }
     }
-    
-    /**
-     * Spawns a projectile from the player towards the target enemy.
-     * @param target The enemy to shoot at.
-     */
+
     private void spawnProjectile(Enemy target) {
         if (target == null) return;
 
-        // Calculate start position (center of player sprite)
         int startX = player.x + (player.getSpriteWidth() / 2);
         int startY = player.y;
 
-        // Calculate target position (center of enemy sprite)
-        int targetX = target.x; // Already perspective-centered
-        int targetY = target.y - (target.getScaledHeight() / 2); // Aim for vertical center
+        int targetX = target.x;
+        int targetY = target.y - (target.getScaledHeight() / 2);
 
         projectiles.add(new Projectile(startX, startY, targetX, targetY, 1));
+        AudioManager.playProjectileSfx();
     }
 
     public void appendTypedCharacter(char c) {
         if (gameState != GameState.PLAYING) return;
         
-        // Get target *before* handling the key
         Enemy preHitTarget = typingManager.getTargetEnemy();
         
         TypingResult result = typingManager.handleKeyTyped(c, enemyManager.getEnemies());
 
-        // Get target *after* handling the key (it might have been set)
         Enemy postHitTarget = typingManager.getTargetEnemy();
         
-        // Use the post-hit target, or if null (word destroyed), use the pre-hit target
         Enemy targetToShootAt = (postHitTarget != null) ? postHitTarget : preHitTarget;
 
         if (result == TypingResult.HIT) {
             gameStats.incrementCharsTyped(1);
-            spawnProjectile(targetToShootAt); // Shoot on HIT
+            spawnProjectile(targetToShootAt);
         } else if (result == TypingResult.DESTROYED) {
             gameStats.incrementCharsTyped(1);
-            spawnProjectile(targetToShootAt); // Shoot on DESTROYED
+            spawnProjectile(targetToShootAt);
             
             if (targetToShootAt != null) {
                 score += targetToShootAt.originalText.length();
@@ -218,7 +207,6 @@ public class GameModel {
         typingManager.handleBackspace();
     }
 
-    // --- Getters ---
     
     public int getScore() {
         return score;

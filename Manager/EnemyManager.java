@@ -50,11 +50,6 @@ public class EnemyManager {
         }
     }
 
-    /**
-     * Gets a random word based on the current wave number.
-     * @param waveNumber The current wave number.
-     * @return A word.
-     */
     private String getWordForWave(int waveNumber) {
         int minLength = 4 + (waveNumber / 3);
         int maxLength = 6 + (waveNumber / 2);
@@ -131,7 +126,7 @@ public class EnemyManager {
 
             Enemy newEnemy;
             int enemyType = random.nextInt(3);
-            
+
             switch (enemyType) {
                 case 0: 
                     newEnemy = new OrcEnemy(text, worldX, zSpeed, 0);
@@ -139,8 +134,9 @@ public class EnemyManager {
                 case 1: 
                     newEnemy = new AranhaEnemy(text, worldX, zSpeed, pixelSpeed * 2.0);
                     break;
-                case 2: 
+                case 2:
                     newEnemy = new LouvaDeusEnemy(text, worldX, zSpeed, worldSpeedX);
+                    break;
                 default:
                     newEnemy = new VespaEnemy(text, worldX, zSpeed, worldSpeedX); 
                     break;

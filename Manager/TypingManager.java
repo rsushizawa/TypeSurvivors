@@ -48,14 +48,12 @@ public class TypingManager {
     }
 
     public TypingResult handleKeyTyped(char c, ArrayList<Enemy> allEnemies) {
-        char lowerC = Character.toLowerCase(c); // Always compare in lowercase
+        char lowerC = Character.toLowerCase(c);
         
         if (targetEnemy == null) {
             Enemy bestMatch = null;
             for (Enemy enemy : allEnemies) {
-                // Check against lowercase original text
                 if (!enemy.text.isEmpty() && enemy.text.charAt(0) == lowerC) {
-                    // Find the "closest" enemy (highest Z value)
                     if (bestMatch == null || enemy.z > bestMatch.z) {
                         bestMatch = enemy;
                     }
@@ -74,12 +72,10 @@ public class TypingManager {
                 displayTypedWord += lowerC;
                 TypingResult result = damageEnemy();
                 if (result == TypingResult.DESTROYED) {
-                    // Let GameModel handle removal, but clear the target for next keypress
                     resetTarget(); 
                 }
                 return result;
             } else {
-                // Mistyped, so reset
                 resetTarget();
                 return TypingResult.MISS;
             }

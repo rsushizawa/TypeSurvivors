@@ -6,12 +6,12 @@ import java.util.Random;
 
 public class LouvaDeusEnemy extends Enemy {
     
-    private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png"; 
-    private static final int SPRITE_WIDTH = 64; 
-    private static final int SPRITE_HEIGHT = 64;
+    private static final String SPRITE_PATH = "Assets/Enemy/mantis sprite sheet.png"; 
+    private static final int SPRITE_WIDTH = 18; 
+    private static final int SPRITE_HEIGHT = 184;
     private static final int WALK_DOWN_ROW = 0;
-    private static final int ANIMATION_FRAMES = 4;
-    private static final int ANIMATION_SPEED = 8;
+    private static final int ANIMATION_FRAMES = 6;
+    private static final int ANIMATION_SPEED = 6;
     
     private double worldSpeedX;
     private static final Random random = new Random();
@@ -31,14 +31,6 @@ public class LouvaDeusEnemy extends Enemy {
             SPRITE_HEIGHT
         );
     }
-
-    /**
-     * Constructor for LouvaDeusEnemy (Zig-zag movement).
-     * @param text The word for this enemy.
-     * @param worldX The initial horizontal "track" position.
-     * @param zSpeed The speed at which z increases (0.0 to 1.0) per frame.
-     * @param worldSpeedX The horizontal speed.
-     */
     public LouvaDeusEnemy(String text, double worldX, double zSpeed, double worldSpeedX) {
         super(text, worldX, zSpeed, orcSprites, ANIMATION_SPEED);
         this.worldSpeedX = worldSpeedX;
