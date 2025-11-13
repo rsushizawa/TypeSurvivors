@@ -255,9 +255,6 @@ public class GameView {
                         int centeredX = enemy.x - (textWidth / 2);
                         int textY = enemy.y + 15; // Position text below the base
                         
-                        g.setColor(Color.BLACK); // Text shadow
-                        g.drawString(enemy.text, centeredX + 1, textY + 1);
-                        
                         if (enemy == target) {
                             g.setColor(Color.RED);
                         } else {
