@@ -38,7 +38,13 @@ public class TypingManager {
     }
 
     private TypingResult damageEnemy() {
+        // Remove the first character (correct letter typed)
         targetEnemy.text = targetEnemy.text.substring(1);
+
+        // Push the enemy slightly away from the player so it is delayed
+        try {
+            targetEnemy.z = Math.max(0.0, targetEnemy.z - Config.EnemyConfig.ENEMY_HIT_PUSHBACK);
+        } catch (Exception ignored) {}
 
         if (targetEnemy.text.isEmpty()) {
             return TypingResult.DESTROYED;
@@ -72,11 +78,11 @@ public class TypingManager {
                 displayTypedWord += lowerC;
                 TypingResult result = damageEnemy();
                 if (result == TypingResult.DESTROYED) {
-                    resetTarget(); 
+                    resetTarget();
                 }
                 return result;
             } else {
-                resetTarget();
+                // On a miss, keep the same target (do not reset to another target).
                 return TypingResult.MISS;
             }
         }

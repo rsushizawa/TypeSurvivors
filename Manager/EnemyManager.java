@@ -164,21 +164,49 @@ public class EnemyManager {
         return false;
     }
 
-    public ArrayList<Enemy> updateEnemies(int wallYPosition) {
+    public ArrayList<Enemy> updateEnemies(int wallYPosition, Model.GameModel model) {
         ArrayList<Enemy> lostEnemies = new ArrayList<>();
         Iterator<Enemy> iter = enemies.iterator();
         
         while (iter.hasNext()) {
             Enemy enemy = iter.next();
             
+            // Allow enemy to react to the model before standard update (special attacks / AI)
+            enemy.onModelUpdate(model);
+
+            // Special handling for one-letter enemy-projectiles (they move in screen space)
+            if (enemy instanceof Entity.Enemy.EnemyProjectile) {
+                Entity.Enemy.EnemyProjectile ep = (Entity.Enemy.EnemyProjectile) enemy;
+                ep.update();
+                // Check collision with player: if it hits, damage player and remove
+                if (model.getPlayer() != null) {
+                    int px = model.getPlayer().x + (model.getPlayer().getSpriteWidth() / 2);
+                    int py = model.getPlayer().y + (model.getPlayer().getSpriteHeight() / 2);
+                    int dx = ep.x - px;
+                    int dy = ep.y - py;
+                    int pr = Math.max(8, model.getPlayer().getSpriteWidth() / 3);
+                    if (dx * dx + dy * dy <= pr * pr) {
+                        model.resetTypingIfTarget(ep);
+                        model.loseLife();
+                        iter.remove();
+                        continue;
+                    }
+                }
+
+                if (ep.isExpired()) {
+                    iter.remove();
+                }
+                continue;
+            }
+
             // Wall logic
             if (wallYPosition > 0 && enemy.y >= wallYPosition) {
                 enemy.updateAnimation(); 
                 continue; 
             }
-            
+
             enemy.update();
-                     
+            
             if (enemy.z >= 1.0) {
                 iter.remove();
                 lostEnemies.add(enemy);
