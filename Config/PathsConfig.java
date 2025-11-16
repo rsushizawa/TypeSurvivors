@@ -14,6 +14,7 @@ public final class PathsConfig {
     // Specific files
     public static final String FIREBALL_SFX = SFX_DIR + "/Fireball SFX.wav";
     public static final String PROJECTILE_SFX = SFX_DIR + "/Projectile SFX.wav";
+    public static final String LOUVA_ATTACK_SFX = SFX_DIR + "/Louva Attack.wav";
     public static final String MAIN_MENU_MUSIC = MUSIC_DIR + "/Main Menu Music.wav";
     public static final String BOSS_MUSIC = MUSIC_DIR + "/Boss Music.wav";
 
