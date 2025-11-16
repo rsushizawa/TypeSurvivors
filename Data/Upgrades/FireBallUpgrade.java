@@ -18,8 +18,7 @@ public class FireBallUpgrade extends Upgrade {
             new Parameter("Cooldown", 10.0, -0.75, "s")     // Param 3: Cooldown (negative increase)
         );
     }
-    
-    // No need to override levelUp(), the base class handles the "2 of 3" logic
+
 
     @Override
     public void apply(GameModel model, Enemy target) {

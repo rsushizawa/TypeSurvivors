@@ -15,6 +15,7 @@ public class AudioManager {
     private static Clip bossMusic;
     private static Clip projectileSfx;
     private static Clip fireballSfx;
+    private static Clip louvaAttackSfx;
 
     private static Clip loadClip(String path) {
         try {
@@ -38,6 +39,7 @@ public class AudioManager {
     bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
     projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
     fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
+    louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
     }
 
     public static void playMainMenuMusic() {
@@ -87,6 +89,13 @@ public class AudioManager {
         if (fireballSfx != null) {
             fireballSfx.setFramePosition(0);
             fireballSfx.start();
+        }
+    }
+
+    public static void playLouvaAttackSfx() {
+        if (louvaAttackSfx != null) {
+            louvaAttackSfx.setFramePosition(0);
+            louvaAttackSfx.start();
         }
     }
 }
