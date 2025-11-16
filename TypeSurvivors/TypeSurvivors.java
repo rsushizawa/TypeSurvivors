@@ -8,7 +8,7 @@ import Audio.AudioManager; // Added import
 
 public class TypeSurvivors {
 
-    public static int gameWidth = 800;
+    public static int gameWidth = 1000;
     public static int gameHeight = 1150;
 
     public static void main(String[] args) {
