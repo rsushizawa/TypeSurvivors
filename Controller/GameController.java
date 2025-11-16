@@ -33,6 +33,31 @@ public class GameController extends KeyAdapter implements ActionListener {
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
         
+        if (model.getGameState() == GameState.LEVEL_UP_CHOICE) {
+            if (keyCode == KeyEvent.VK_1 || keyCode == KeyEvent.VK_NUMPAD1) {
+                model.getUpgradeManager().selectUpgrade(0);
+                model.setGameState(GameState.PLAYING);
+                // Resume game loop after selecting an upgrade
+                if (!gameLoop.isRunning()) {
+                    gameLoop.start();
+                }
+            } else if (keyCode == KeyEvent.VK_2 || keyCode == KeyEvent.VK_NUMPAD2) {
+                model.getUpgradeManager().selectUpgrade(1);
+                model.setGameState(GameState.PLAYING);
+                if (!gameLoop.isRunning()) {
+                    gameLoop.start();
+                }
+            } else if (keyCode == KeyEvent.VK_3 || keyCode == KeyEvent.VK_NUMPAD3) {
+                model.getUpgradeManager().selectUpgrade(2);
+                model.setGameState(GameState.PLAYING);
+                if (!gameLoop.isRunning()) {
+                    gameLoop.start();
+                }
+            }
+            view.repaint();
+            return;
+        }
+        
         if (keyCode == KeyEvent.VK_ESCAPE) {
             if (model.getGameState() == GameState.PLAYING || 
                 model.getGameState() == GameState.PAUSED) {
@@ -80,8 +105,15 @@ public class GameController extends KeyAdapter implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (model.getGameState() == GameState.PLAYING) {
+        GameState currentState = model.getGameState();
+        
+        if (currentState == GameState.PLAYING) {
             model.updateGameState();
+        } else if (currentState == GameState.LEVEL_UP_CHOICE) {
+            // Pause the timer while the player chooses an upgrade.
+            if (gameLoop.isRunning()) {
+                gameLoop.stop();
+            }
         }
         
         view.repaint();
