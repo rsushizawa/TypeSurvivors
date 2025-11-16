@@ -40,6 +40,10 @@ public class AnimatedSprite {
         }
     }
 
+    public void setLoopAnimation(boolean loop) {
+        this.loopAnimation = loop;
+    }
+
     public BufferedImage getCurrentSprite() {
         if (sprites == null || sprites.length == 0) {
             return null;

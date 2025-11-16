@@ -1,6 +1,7 @@
 package Manager;
 
 import Entity.Enemy.Enemy;
+import Config.EnemyConfig;
 import Entity.Enemy.AranhaEnemy;
 import Entity.Enemy.LouvaDeusEnemy;
 import Entity.Enemy.OrcEnemy;
@@ -37,8 +38,8 @@ public class EnemyManager {
             WORDS_BY_LENGTH.add(new ArrayList<String>());
         }
 
-        String csvFile = "Assets/dict-correto.csv";
-        try (Scanner scanner = new Scanner(new File(csvFile))) {
+    String csvFile = Config.PathsConfig.DICTIONARY_CSV;
+    try (Scanner scanner = new Scanner(new File(csvFile))) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine().trim().toLowerCase();
                 if (!line.isEmpty() && line.length() < MAX_WORD_LENGTH_SUPPORTED && line.matches("^[a-z]+$")) {
@@ -113,7 +114,7 @@ public class EnemyManager {
 
             String text = getWordForWave(waveNumber);
             
-            double worldX = random.nextInt(gameWidth - 100) + 50.0;
+            double worldX = random.nextInt(gameWidth - (2 * EnemyConfig.SPAWN_BORDER)) + EnemyConfig.SPAWN_BORDER;
             
             int minSpeed = Math.max(1, (int)(baseSpeedPixels * 0.7));
             int maxSpeed = (int)(baseSpeedPixels * 1.3) + 1;
@@ -121,11 +122,12 @@ public class EnemyManager {
             
             int effectiveGameHeight = Enemy.PLAYER_Y_LINE - Enemy.HORIZON_Y;
             double zSpeed = (double)pixelSpeed / effectiveGameHeight;
+            zSpeed *= EnemyConfig.ENEMY_SPEED_MULTIPLIER;
             
             double worldSpeedX = (random.nextDouble() * 4.0 + 2.0) * (random.nextBoolean() ? 1 : -1);
 
             Enemy newEnemy;
-            int enemyType = random.nextInt(3);
+            int enemyType = random.nextInt(4);
 
             switch (enemyType) {
                 case 0: 
@@ -137,24 +139,74 @@ public class EnemyManager {
                 case 2:
                     newEnemy = new LouvaDeusEnemy(text, worldX, zSpeed, worldSpeedX);
                     break;
+                case 3:
+                    newEnemy = new VespaEnemy(text, worldX, zSpeed, worldSpeedX); 
+                    break;
                 default:
                     newEnemy = new VespaEnemy(text, worldX, zSpeed, worldSpeedX); 
                     break;
             }
+            int margin;
+            if (newEnemy instanceof VespaEnemy || newEnemy instanceof LouvaDeusEnemy) {
+                margin = EnemyConfig.MARGIN_LARGE; // big sprites
+            } else if (newEnemy instanceof AranhaEnemy) {
+                margin = EnemyConfig.MARGIN_MEDIUM; // medium sprites
+            } else {
+                margin = EnemyConfig.MARGIN_SMALL; // default small margin
+            }
+
+            newEnemy.MIN_WIDTH = margin;
+            newEnemy.MAX_WIDTH = Math.max(margin + 10, gameWidth - margin);
+
             enemies.add(newEnemy);
             return true;
         }
         return false;
     }
 
-    public ArrayList<Enemy> updateEnemies() {
+    public ArrayList<Enemy> updateEnemies(int wallYPosition, Model.GameModel model) {
         ArrayList<Enemy> lostEnemies = new ArrayList<>();
         Iterator<Enemy> iter = enemies.iterator();
         
         while (iter.hasNext()) {
             Enemy enemy = iter.next();
+            
+            // Allow enemy to react to the model before standard update (special attacks / AI)
+            enemy.onModelUpdate(model);
+
+            // Special handling for one-letter enemy-projectiles (they move in screen space)
+            if (enemy instanceof Entity.Enemy.EnemyProjectile) {
+                Entity.Enemy.EnemyProjectile ep = (Entity.Enemy.EnemyProjectile) enemy;
+                ep.update();
+                // Check collision with player: if it hits, damage player and remove
+                if (model.getPlayer() != null) {
+                    int px = model.getPlayer().x + (model.getPlayer().getSpriteWidth() / 2);
+                    int py = model.getPlayer().y + (model.getPlayer().getSpriteHeight() / 2);
+                    int dx = ep.x - px;
+                    int dy = ep.y - py;
+                    int pr = Math.max(8, model.getPlayer().getSpriteWidth() / 3);
+                    if (dx * dx + dy * dy <= pr * pr) {
+                        model.resetTypingIfTarget(ep);
+                        model.loseLife();
+                        iter.remove();
+                        continue;
+                    }
+                }
+
+                if (ep.isExpired()) {
+                    iter.remove();
+                }
+                continue;
+            }
+
+            // Wall logic
+            if (wallYPosition > 0 && enemy.y >= wallYPosition) {
+                enemy.updateAnimation(); 
+                continue; 
+            }
+
             enemy.update();
-                     
+            
             if (enemy.z >= 1.0) {
                 iter.remove();
                 lostEnemies.add(enemy);
