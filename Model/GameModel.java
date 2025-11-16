@@ -53,6 +53,10 @@ public class GameModel {
     private double wallCooldown = 0;
     private double wallDuration = 0;
     private int wallYPosition = -1;
+    // Wrong-character shake effect
+    private double wrongCharShakeTime = 0.0;
+    private final double WRONG_CHAR_SHAKE_DURATION = 0.35; // seconds
+    private final int WRONG_CHAR_SHAKE_AMPLITUDE = 8; // pixels
 
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
@@ -229,6 +233,11 @@ public class GameModel {
         }
         // --- End FireBall Effects ---
 
+        // Update wrong-char shake timer
+        if (wrongCharShakeTime > 0) {
+            wrongCharShakeTime = Math.max(0.0, wrongCharShakeTime - delta);
+        }
+
 
         if (waveManager.update()) {
             score += 100;
@@ -360,6 +369,11 @@ public class GameModel {
                 enemyManager.removeEnemy(targetToShootAt);
             }
         }
+            else if (result == TypingResult.MISS) {
+                // Play wrong-character feedback (sound + shake)
+                AudioManager.playWrongCharSfx();
+                wrongCharShakeTime = WRONG_CHAR_SHAKE_DURATION;
+            }
         
     // Check if we leveled up and need to show the screen
         if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
@@ -522,5 +536,16 @@ public class GameModel {
     
     public int getWallYPosition() {
         return wallYPosition;
+    }
+
+    /** Returns the current horizontal shake offset (in pixels) for wrong-char feedback. */
+    public int getShakeOffsetX() {
+        if (wrongCharShakeTime <= 0) return 0;
+        double progress = 1.0 - (wrongCharShakeTime / WRONG_CHAR_SHAKE_DURATION); // 0..1
+        // oscillate several times and decay
+        double oscillations = 6.0;
+        double angle = progress * Math.PI * 2.0 * oscillations;
+        double decay = 1.0 - progress; // linear decay
+        return (int) Math.round(Math.sin(angle) * WRONG_CHAR_SHAKE_AMPLITUDE * decay);
     }
 }

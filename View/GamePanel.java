@@ -167,10 +167,11 @@ public class GamePanel extends JPanel {
             }
         }
 
-        // Draw player
+        // Draw player (apply wrong-char shake offset)
         Player player = model.getPlayer();
+        int shakeX = model.getShakeOffsetX();
         if (player != null && player.hasSprites()) {
-            g.drawImage(player.getCurrentSprite(), player.x, player.y, null);
+            g.drawImage(player.getCurrentSprite(), player.x + shakeX, player.y, null);
         }
 
         // Draw danger line

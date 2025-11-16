@@ -7,7 +7,7 @@ public final class EnemyConfig {
 	private EnemyConfig() {}
 
 	// Base movement speed applied to enemies before per-type adjustments
-	public static final double BASE_SPEED = 1.0;
+	public static final double BASE_SPEED = 0.5;
 
 	// Per-wave speed scaling (multiplicative)
 	public static final double SPEED_SCALE_PER_WAVE = 1.03;

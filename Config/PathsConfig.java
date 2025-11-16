@@ -17,6 +17,7 @@ public final class PathsConfig {
     public static final String LOUVA_ATTACK_SFX = SFX_DIR + "/Louva Attack.wav";
     public static final String MAIN_MENU_MUSIC = MUSIC_DIR + "/Main Menu Music.wav";
     public static final String BOSS_MUSIC = MUSIC_DIR + "/Boss Music.wav";
+    public static final String WRONG_CHAR_SFX = SFX_DIR + "/WrongChar.wav";
 
     public static final String DICTIONARY_CSV = ASSETS_DIR + "/dict-correto.csv";
     public static final String LEADERBOARD_FILE = "leaderboard.txt";

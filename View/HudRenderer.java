@@ -13,9 +13,10 @@ public class HudRenderer {
         g.setColor(new Color(0, 0, 0, 100));
         g.fillRect(0, panelHeight - 50, panelWidth, 50);
 
-        g.setColor(Color.GREEN);
-        g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.TYPING_FONT));
-        g.drawString("> " + model.getDisplayTypedWord(), 20, panelHeight - 20);
+    g.setColor(Color.GREEN);
+    g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.TYPING_FONT));
+    int shake = model.getShakeOffsetX();
+    g.drawString("> " + model.getDisplayTypedWord(), 20 + shake, panelHeight - 20);
 
         g.setColor(Color.YELLOW);
         g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.STATS_FONT));
