@@ -1,6 +1,7 @@
 package Audio;
 
 import java.io.File;
+import Config.PathsConfig;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -13,6 +14,7 @@ public class AudioManager {
     private static Clip mainMenuMusic;
     private static Clip bossMusic;
     private static Clip projectileSfx;
+    private static Clip fireballSfx;
 
     private static Clip loadClip(String path) {
         try {
@@ -32,9 +34,10 @@ public class AudioManager {
         }
     }
     public static void init() {
-        mainMenuMusic = loadClip("Assets/Music/Main Menu Music.wav");
-        bossMusic = loadClip("Assets/Music/Boss Music.wav");
-        projectileSfx = loadClip("Assets/SFX/Projectile SFX.wav");
+    mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
+    bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
+    projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
+    fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
     }
 
     public static void playMainMenuMusic() {
@@ -77,6 +80,13 @@ public class AudioManager {
         if (projectileSfx != null) {
             projectileSfx.setFramePosition(0);
             projectileSfx.start(); 
+        }
+    }
+
+    public static void playFireballSfx() {
+        if (fireballSfx != null) {
+            fireballSfx.setFramePosition(0);
+            fireballSfx.start();
         }
     }
 }
