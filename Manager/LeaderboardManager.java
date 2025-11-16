@@ -1,13 +1,14 @@
 package Manager;
 
 import Data.HighScoreEntry;
+import Config.PathsConfig;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class LeaderboardManager {
-    private static final String LEADERBOARD_FILE = "leaderboard.txt";
+    private static final String LEADERBOARD_FILE = PathsConfig.LEADERBOARD_FILE;
     private static final int MAX_ENTRIES = 5;
     private List<HighScoreEntry> highScores;
 

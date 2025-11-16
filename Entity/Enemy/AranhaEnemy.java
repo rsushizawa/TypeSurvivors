@@ -49,6 +49,15 @@ public class AranhaEnemy extends Enemy {
         double angle = (this.z * this.worldSpeedX * 0.1 * Math.PI); 
         this.worldX = this.initialWorldX + (Math.sin(angle) * SINE_AMPLITUDE);
         
+        // Eased clamp (bounce) to avoid teleporting off-screen when sine pushes out of bounds
+        if (this.worldX > this.MAX_WIDTH) {
+            double overshoot = this.worldX - this.MAX_WIDTH;
+            this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        } else if (this.worldX < this.MIN_WIDTH) {
+            double overshoot = this.MIN_WIDTH - this.worldX;
+            this.worldX = this.MIN_WIDTH + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        }
+
         updatePerspective();
     }
 }
