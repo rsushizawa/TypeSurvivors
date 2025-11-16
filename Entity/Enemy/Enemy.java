@@ -2,6 +2,7 @@ package Entity.Enemy;
 
 import Animation.AnimatedSprite;
 import java.awt.image.BufferedImage;
+import Config.EnemyConfig;
 
 public class Enemy {
     public String text;
@@ -85,10 +86,18 @@ public class Enemy {
     }
 
     public int getScaledWidth() {
-        return (int)(this.spriteWidth * this.scale);
+        // Normalize sprite sizes so that very large source sprites scale similarly
+    double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
+        if (spriteWidth <= 0) return 0;
+        double scaleFactor = normalized / (double)spriteWidth;
+        return (int)(this.spriteWidth * this.scale * scaleFactor);
     }
 
     public int getScaledHeight() {
-        return (int)(this.spriteHeight * this.scale);
+        // Keep height proportional to width normalization
+    double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
+        if (spriteWidth <= 0) return 0;
+        double scaleFactor = normalized / (double)spriteWidth;
+        return (int)(this.spriteHeight * this.scale * scaleFactor);
     }
 }

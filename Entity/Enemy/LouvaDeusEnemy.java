@@ -7,13 +7,14 @@ import java.util.Random;
 public class LouvaDeusEnemy extends Enemy {
     
     private static final String SPRITE_PATH = "Assets/Enemy/mantis sprite sheet.png"; 
-    private static final int SPRITE_WIDTH = 18; 
+    private static final int SPRITE_WIDTH = 184; 
     private static final int SPRITE_HEIGHT = 184;
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 6;
     private static final int ANIMATION_SPEED = 6;
     
     private double worldSpeedX;
+    // random kept for potential future behavior
     private static final Random random = new Random();
     
     private static BufferedImage[] orcSprites = null;
@@ -46,14 +47,14 @@ public class LouvaDeusEnemy extends Enemy {
         
         this.worldX += this.worldSpeedX;
         
-        if(this.worldX > this.MAX_WIDTH || this.worldX < this.MIN_WIDTH){
-            this.worldSpeedX = -this.worldSpeedX;
-            if(this.worldX > this.MAX_WIDTH){
-                this.MIN_WIDTH = random.nextInt(10, 600 / 2);
-            }
-            else{
-                this.MAX_WIDTH = random.nextInt(600 / 2, 600 - 40);
-            }
+        if (this.worldX > this.MAX_WIDTH) {
+            double overshoot = this.worldX - this.MAX_WIDTH;
+            this.worldSpeedX = -Math.abs(this.worldSpeedX);
+            this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
+        } else if (this.worldX < this.MIN_WIDTH) {
+            double overshoot = this.MIN_WIDTH - this.worldX;
+            this.worldSpeedX = Math.abs(this.worldSpeedX);
+            this.worldX = this.MIN_WIDTH + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
         }
         
         updatePerspective();
