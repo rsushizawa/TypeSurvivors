@@ -40,6 +40,8 @@ public class GameModel {
     private final ArrayList<GameObject.PoisonWall> poisonWalls = new ArrayList<>();
     private final ArrayList<GameObject.FireBallEffect> fireBallEffects = new ArrayList<>();
     private final Random rand = new Random();
+    // Enemies spawned during update are queued here to avoid modifying the active list
+    private final ArrayList<Enemy> pendingEnemies = new ArrayList<>();
     
     public static final int GAME_SPEED_MS = 16;
     public static final int MAX_NAME_LENGTH = 10;
@@ -97,7 +99,7 @@ public class GameModel {
         AudioManager.playMainMenuMusic();
     }
 
-    private void loseLife() {
+    public void loseLife() {
         lives--;
         if (lives <= 0) {
             AudioManager.stopAllMusic();
@@ -140,13 +142,45 @@ public class GameModel {
         while (projIter.hasNext()) {
             Projectile p = projIter.next();
             p.update();
-            if (!p.isActive()) {
+
+            boolean removeProjectile = false;
+
+            if (p.isEnemyOwned()) {
+                // Enemy-fired projectile: check collision with player
+                int px = player.x + (player.getSpriteWidth() / 2);
+                int py = player.y + (player.getSpriteHeight() / 2);
+                int dx = p.x - px;
+                int dy = p.y - py;
+                int pr = Math.max(8, player.getSpriteWidth() / 3);
+                if (dx * dx + dy * dy <= pr * pr) {
+                    // Hit player
+                    removeProjectile = true;
+                    loseLife();
+                }
+            } else {
+                // Player-fired projectile: check collision with enemies
+                for (Enemy e : enemyManager.getEnemies()) {
+                    int dx = p.x - e.x;
+                    int dy = p.y - e.y;
+                    int radius = Math.max(8, e.getScaledWidth() / 3);
+                    if (dx * dx + dy * dy <= radius * radius) {
+                        // projectile hit an enemy -> remove projectile
+                        removeProjectile = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!p.isActive() || removeProjectile) {
                 projIter.remove();
             }
         }
         
         for (Enemy enemy : enemyManager.getEnemies()) {
-            enemy.updateAnimation();
+            // Update animations for normal enemies; for EnemyProjectile there are no sprites
+            if (!(enemy instanceof Entity.Enemy.EnemyProjectile)) {
+                enemy.updateAnimation();
+            }
         }
 
         if (waveManager.getWaveState() != WaveState.INTERMISSION) {
@@ -230,10 +264,15 @@ public class GameModel {
 
     private void updateAndCheckLostEnemies() {
         // Pass wall position to enemy manager
-        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(isWallActive() ? wallYPosition : -1);
+        ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(isWallActive() ? wallYPosition : -1, this);
         for (Enemy lostEnemy : lostEnemies) {
             loseLife();
             typingManager.checkTargetLost(lostEnemy);
+        }
+        // Append any newly queued enemies (spawned during enemy updates)
+        if (!pendingEnemies.isEmpty()) {
+            enemyManager.getEnemies().addAll(pendingEnemies);
+            pendingEnemies.clear();
         }
     }
 
@@ -316,6 +355,8 @@ public class GameModel {
                 }
                 score += scoreIncrease;
                 
+                // If the killed enemy was the current typing target, reset typing UI
+                resetTypingIfTarget(targetToShootAt);
                 enemyManager.removeEnemy(targetToShootAt);
             }
         }
@@ -366,6 +407,12 @@ public class GameModel {
 
     public ArrayList<Enemy> getEnemies() {
         return enemyManager.getEnemies();
+    }
+
+    /** Add an enemy to the world (used by effects that spawn mini-enemies/projectiles). */
+    public void addEnemy(Enemy e) {
+        // Queue new enemies to be appended after the current update loop completes
+        pendingEnemies.add(e);
     }
     
     public Player getPlayer() {
