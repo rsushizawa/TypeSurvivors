@@ -151,6 +151,19 @@ public class GamePanel extends JPanel {
                     }
                     g.drawString(enemy.text, centeredX, textY);
                 }
+            } else {
+                float fontSize = 12.0f; 
+                g.setFont(new Font("Monospaced", Font.BOLD, (int)fontSize));
+                FontMetrics fm = g.getFontMetrics();
+                int textWidth = fm.stringWidth(enemy.text);
+                int centeredX = enemy.x - (textWidth / 2);
+                int textY = enemy.y;
+                if (enemy == target) {
+                    g.setColor(Color.RED);
+                } else {
+                    g.setColor(Color.WHITE);
+                }
+                g.drawString(enemy.text, centeredX, textY);
             }
         }
 
@@ -199,6 +212,5 @@ public class GamePanel extends JPanel {
         }
     }
 
-    // Level-up/menu/game-over rendering moved to LevelUpRenderer/MenuRenderer.
 
 }

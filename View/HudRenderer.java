@@ -6,9 +6,6 @@ import java.util.List;
 import Model.GameModel;
 import Manager.UpgradeManager;
 
-/**
- * Responsible for drawing HUD elements: typing box, stats, cooldown icons, and XP bar.
- */
 public class HudRenderer {
 
     public void render(Graphics2D g, GameModel model, List<Rectangle> cooldownIconBounds, List<String> cooldownIconTooltips, int panelWidth, int panelHeight) {

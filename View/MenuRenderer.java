@@ -6,9 +6,7 @@ import Model.GameModel;
 import Data.HighScoreEntry;
 import Config.GameConfig;
 
-/**
- * Renders main menu, leaderboard, name entry and simple overlays (pause, game over).
- */
+
 public class MenuRenderer {
 
     public void renderMainMenu(Graphics2D g, GameModel model, int width, int height) {
