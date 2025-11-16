@@ -3,6 +3,7 @@ package Entity.Enemy;
 import Animation.AnimatedSprite;
 import java.awt.image.BufferedImage;
 import Config.EnemyConfig;
+import Model.GameModel;
 
 public class Enemy {
     public String text;
@@ -63,6 +64,12 @@ public class Enemy {
         if (animatedSprite != null) {
             animatedSprite.updateAnimation();
         }
+    }
+
+    /** Optional per-frame hook for enemies to react to the game model (e.g. special attacks).
+     * Default implementation does nothing. Subclasses may override. */
+    public void onModelUpdate(GameModel model) {
+        // no-op by default
     }
 
     public BufferedImage getCurrentSprite() {
