@@ -15,6 +15,7 @@ public class WaveManager {
     private static final int INTERMISSION_TICKS = 180;
     private int baseWordSpeed = 1;
     private int baseSpawnChance = 80;
+    private final WaveDifficultyManager difficultyManager = new WaveDifficultyManager();
 
     public void reset() {
         waveNumber = 0;
@@ -22,7 +23,7 @@ public class WaveManager {
         waveSpeedPixels = 1;
         waveSpawnChance = 80;
         waveState = WaveState.INTERMISSION;
-        intermissionTickCounter = 90;
+        intermissionTickCounter = difficultyManager.getIntermissionTicks() / 2; // shorter first intermission
     }
 
     public WaveState getWaveState() {
@@ -62,11 +63,11 @@ public class WaveManager {
 
     public void startNextWave() {
         waveNumber++;
-        enemiesLeftToSpawn = 5 + (waveNumber * 2);
-        
-        waveSpeedPixels = baseWordSpeed + (waveNumber / 6);
-        waveSpawnChance = Math.max(20, baseSpawnChance - (waveNumber * 5));
-        
+        enemiesLeftToSpawn = difficultyManager.enemiesForWave(waveNumber);
+
+        waveSpeedPixels = difficultyManager.waveSpeedPixels(waveNumber);
+        waveSpawnChance = difficultyManager.spawnChanceForWave(waveNumber);
+
         waveState = WaveState.SPAWNING;
 
         if (waveNumber % 5 == 0) {
@@ -78,7 +79,7 @@ public class WaveManager {
 
     public void startIntermission() {
         waveState = WaveState.INTERMISSION;
-        intermissionTickCounter = INTERMISSION_TICKS;
+        intermissionTickCounter = difficultyManager.getIntermissionTicks();
     }
 
     public void notifyEnemySpawned() {
