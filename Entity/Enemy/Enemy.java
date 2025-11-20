@@ -51,7 +51,22 @@ public class Enemy {
         
         this.y = (int)(HORIZON_Y + this.z * (PLAYER_Y_LINE - HORIZON_Y));
         
-        this.x = (int)(VANISHING_POINT_X + (this.worldX - VANISHING_POINT_X) * this.scale);
+        int projectedX = (int)(VANISHING_POINT_X + (this.worldX - VANISHING_POINT_X) * this.scale);
+        int halfScaledWidth = 0;
+        int scaledW = getScaledWidth();
+        if (scaledW > 0) halfScaledWidth = scaledW / 2;
+
+        int minXAllowed = this.MIN_WIDTH + halfScaledWidth;
+        int maxXAllowed = this.MAX_WIDTH - halfScaledWidth;
+        if (minXAllowed > maxXAllowed) {
+            minXAllowed = this.MIN_WIDTH;
+            maxXAllowed = this.MAX_WIDTH;
+        }
+
+        if (projectedX < minXAllowed) projectedX = minXAllowed;
+        if (projectedX > maxXAllowed) projectedX = maxXAllowed;
+
+        this.x = projectedX;
     }
 
     public void update(){

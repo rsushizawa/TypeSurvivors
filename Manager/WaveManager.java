@@ -8,22 +8,21 @@ public class WaveManager {
     private int waveNumber = 0;
     private int enemiesLeftToSpawn;
     private int waveSpeedPixels = 1;
-    private int waveSpawnChance = 80;
     private WaveState waveState = WaveState.INTERMISSION;
     private int intermissionTickCounter = 90;
 
-    private static final int INTERMISSION_TICKS = 180;
-    private int baseWordSpeed = 1;
-    private int baseSpawnChance = 80;
     private final WaveDifficultyManager difficultyManager = new WaveDifficultyManager();
+    private int totalEnemiesThisWave = 0;
+    private int spawnedSoFar = 0;
 
     public void reset() {
         waveNumber = 0;
         enemiesLeftToSpawn = 0;
         waveSpeedPixels = 1;
-        waveSpawnChance = 80;
         waveState = WaveState.INTERMISSION;
         intermissionTickCounter = difficultyManager.getIntermissionTicks() / 2; // shorter first intermission
+        totalEnemiesThisWave = 0;
+        spawnedSoFar = 0;
     }
 
     public WaveState getWaveState() {
@@ -42,8 +41,12 @@ public class WaveManager {
         return waveSpeedPixels;
     }
 
+    /**
+     * Dynamic spawn chance computed by the difficulty manager. Lower return value means more frequent spawns.
+     */
     public int getWaveSpawnChance() {
-        return waveSpawnChance;
+        if (waveNumber <= 0) return difficultyManager.spawnChanceForWave(0);
+        return difficultyManager.spawnChanceDuringWave(waveNumber, spawnedSoFar, totalEnemiesThisWave);
     }
 
     public boolean canSpawnEnemy() {
@@ -63,10 +66,11 @@ public class WaveManager {
 
     public void startNextWave() {
         waveNumber++;
-        enemiesLeftToSpawn = difficultyManager.enemiesForWave(waveNumber);
+        totalEnemiesThisWave = difficultyManager.enemiesForWave(waveNumber);
+        enemiesLeftToSpawn = totalEnemiesThisWave;
+        spawnedSoFar = 0;
 
         waveSpeedPixels = difficultyManager.waveSpeedPixels(waveNumber);
-        waveSpawnChance = difficultyManager.spawnChanceForWave(waveNumber);
 
         waveState = WaveState.SPAWNING;
 
@@ -84,6 +88,7 @@ public class WaveManager {
 
     public void notifyEnemySpawned() {
         enemiesLeftToSpawn--;
+        spawnedSoFar++;
         if (enemiesLeftToSpawn <= 0) {
             waveState = WaveState.WAITING_FOR_CLEAR;
         }
