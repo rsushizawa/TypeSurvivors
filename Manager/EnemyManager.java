@@ -178,19 +178,26 @@ public class EnemyManager {
             if (enemy instanceof Entity.Enemy.EnemyProjectile) {
                 Entity.Enemy.EnemyProjectile ep = (Entity.Enemy.EnemyProjectile) enemy;
                 ep.update();
-                // Check collision with player: if it hits, damage player and remove
+                // Debug: if projectile gets reasonably close to player, log its position
                 if (model.getPlayer() != null) {
                     int px = model.getPlayer().x + (model.getPlayer().getSpriteWidth() / 2);
                     int py = model.getPlayer().y + (model.getPlayer().getSpriteHeight() / 2);
-                    int dx = ep.x - px;
-                    int dy = ep.y - py;
-                    int pr = Math.max(8, model.getPlayer().getSpriteWidth() / 3);
-                    if (dx * dx + dy * dy <= pr * pr) {
-                        model.resetTypingIfTarget(ep);
-                        model.loseLife();
-                        iter.remove();
-                        continue;
+                    int dxClose = ep.x - px;
+                    int dyClose = ep.y - py;
+                    int closeThresh = 200;
+                    if (dxClose * dxClose + dyClose * dyClose <= closeThresh * closeThresh) {
+                        System.out.println(String.format("[DEBUG] EnemyProjectile near player at (%d,%d) dx=%d dy=%d", ep.x, ep.y, dxClose, dyClose));
                     }
+                }
+                // Damage is triggered when the letter reaches the danger line (player line),
+                // not necessarily by direct overlap with the player's bounding circle.
+                if (ep.y >= Entity.Enemy.Enemy.PLAYER_Y_LINE) {
+                    // If this mini-enemy was the current typing target, clear typing state
+                    model.resetTypingIfTarget(ep);
+                    model.loseLife();
+                    System.out.println(String.format("[DEBUG] EnemyProjectile reached line at (%d,%d). Lives now: %d", ep.x, ep.y, model.getLives()));
+                    iter.remove();
+                    continue;
                 }
 
                 if (ep.isExpired()) {

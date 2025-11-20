@@ -7,7 +7,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import Model.GameModel;
+import Data.Upgrades.Upgrade;
 import View.GameView;
+import Entity.Enemy.EnemyProjectile;
+import Config.EnemyConfig;
 import Data.GameState;
 
 public class GameController extends KeyAdapter implements ActionListener {
@@ -35,20 +38,36 @@ public class GameController extends KeyAdapter implements ActionListener {
         
         if (model.getGameState() == GameState.LEVEL_UP_CHOICE) {
             if (keyCode == KeyEvent.VK_1 || keyCode == KeyEvent.VK_NUMPAD1) {
+                // apply the chosen upgrade immediately so utility upgrades take effect now
+                Upgrade choice0 = null;
+                if (!model.getUpgradeManager().getCurrentLevelUpOffer().isEmpty()) {
+                    choice0 = model.getUpgradeManager().getCurrentLevelUpOffer().get(0);
+                }
                 model.getUpgradeManager().selectUpgrade(0);
+                if (choice0 != null) choice0.apply(model, null);
                 model.setGameState(GameState.PLAYING);
                 // Resume game loop after selecting an upgrade
                 if (!gameLoop.isRunning()) {
                     gameLoop.start();
                 }
             } else if (keyCode == KeyEvent.VK_2 || keyCode == KeyEvent.VK_NUMPAD2) {
+                Upgrade choice1 = null;
+                if (model.getUpgradeManager().getCurrentLevelUpOffer().size() > 1) {
+                    choice1 = model.getUpgradeManager().getCurrentLevelUpOffer().get(1);
+                }
                 model.getUpgradeManager().selectUpgrade(1);
+                if (choice1 != null) choice1.apply(model, null);
                 model.setGameState(GameState.PLAYING);
                 if (!gameLoop.isRunning()) {
                     gameLoop.start();
                 }
             } else if (keyCode == KeyEvent.VK_3 || keyCode == KeyEvent.VK_NUMPAD3) {
+                Upgrade choice2 = null;
+                if (model.getUpgradeManager().getCurrentLevelUpOffer().size() > 2) {
+                    choice2 = model.getUpgradeManager().getCurrentLevelUpOffer().get(2);
+                }
                 model.getUpgradeManager().selectUpgrade(2);
+                if (choice2 != null) choice2.apply(model, null);
                 model.setGameState(GameState.PLAYING);
                 if (!gameLoop.isRunning()) {
                     gameLoop.start();
@@ -64,6 +83,12 @@ public class GameController extends KeyAdapter implements ActionListener {
                 model.togglePause();
                 view.repaint();
             }
+            return;
+        }
+
+        if (keyCode == KeyEvent.VK_TAB) {
+            model.tryActivateWall();
+            view.repaint();
             return;
         }
 
@@ -110,7 +135,6 @@ public class GameController extends KeyAdapter implements ActionListener {
         if (currentState == GameState.PLAYING) {
             model.updateGameState();
         } else if (currentState == GameState.LEVEL_UP_CHOICE) {
-            // Pause the timer while the player chooses an upgrade.
             if (gameLoop.isRunning()) {
                 gameLoop.stop();
             }

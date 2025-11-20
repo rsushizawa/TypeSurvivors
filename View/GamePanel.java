@@ -31,6 +31,14 @@ public class GamePanel extends JPanel {
         this.parent = parent;
         this.model = model;
         setToolTipText("");
+
+        setFocusTraversalKeysEnabled(false);
+        this.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                requestFocusInWindow();
+            }
+        });
     }
 
     @Override
@@ -137,9 +145,8 @@ public class GamePanel extends JPanel {
                     int drawX = enemy.x - (scaledWidth / 2);
                     int drawY = enemy.y - scaledHeight;
                     g.drawImage(sprite, drawX, drawY, scaledWidth, scaledHeight, null);
-                    float fontSize = (float)(16.0 * enemy.getScale());
-                    if (fontSize < 8) fontSize = 8;
-                    g.setFont(new Font("Monospaced", Font.BOLD, (int)fontSize));
+                    int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
+                    g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
                     FontMetrics fm = g.getFontMetrics();
                     int textWidth = fm.stringWidth(enemy.text);
                     int centeredX = enemy.x - (textWidth / 2);
@@ -152,8 +159,8 @@ public class GamePanel extends JPanel {
                     g.drawString(enemy.text, centeredX, textY);
                 }
             } else {
-                float fontSize = 12.0f; 
-                g.setFont(new Font("Monospaced", Font.BOLD, (int)fontSize));
+                int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
+                g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
                 FontMetrics fm = g.getFontMetrics();
                 int textWidth = fm.stringWidth(enemy.text);
                 int centeredX = enemy.x - (textWidth / 2);

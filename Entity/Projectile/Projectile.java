@@ -13,9 +13,6 @@ public class Projectile extends GameObject {
         this(x, y, targetX, targetY, damage, PROJECTILE_SPEED, false);
     }
 
-    /**
-     * Full constructor allowing custom speed and ownership flag (enemy/projectile).
-     */
     public Projectile(int x, int y, int targetX, int targetY, int damage, int speed, boolean enemyOwned) {
         super(x, y);
 

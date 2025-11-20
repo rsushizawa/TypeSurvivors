@@ -9,7 +9,6 @@ import Manager.UpgradeManager;
 public class HudRenderer {
 
     public void render(Graphics2D g, GameModel model, List<Rectangle> cooldownIconBounds, List<String> cooldownIconTooltips, int panelWidth, int panelHeight) {
-        // UI (typing & stats)
         g.setColor(new Color(0, 0, 0, 100));
         g.fillRect(0, panelHeight - 50, panelWidth, 50);
 
@@ -21,127 +20,97 @@ public class HudRenderer {
         g.setColor(Color.YELLOW);
         g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.STATS_FONT));
         g.drawString("Score: " + model.getScore(), 20, 30);
-        g.drawString("Lives: " + model.getLives(), panelWidth - 100, 30);
+        String livesText = String.format("Lives: %d/%d", model.getLives(), model.getMaxLives());
+        g.drawString(livesText, panelWidth - 160, 30);
         g.drawString("Wave: " + model.getWaveNumber(), panelWidth / 2 - 40, 30);
         g.drawString("WPM: " + model.getWPM(), 20, 55);
 
-        // Cooldown icons (stacked vertically)
+        double regenRate = model.getActiveRegenRate();
+        double regenRemaining = model.getActiveRegenRemaining();
+        if (regenRate > 0.0 && regenRemaining > 0.0) {
+            String regenText = String.format("Regen: +%.1f hp/s (%.1fs)", regenRate, regenRemaining);
+            g.setColor(new Color(120, 255, 120));
+            g.setFont(new Font("Monospaced", Font.PLAIN, Config.GameConfig.STATS_FONT - 2));
+            int rx = panelWidth - 360;
+            g.drawString(regenText, rx, 30);
+
+            double regenCD = model.getHealthRegenCooldown();
+            double regenCDMax = model.getHealthRegenMaxCooldown();
+            if (regenCD > 0 && regenCDMax > 0) {
+                int barW = 120;
+                int barH = 8;
+                int barX = rx;
+                int barY = 34;
+                g.setColor(Color.DARK_GRAY);
+                g.fillRect(barX, barY, barW, barH);
+                double frac = Math.max(0.0, Math.min(1.0, 1.0 - (regenCD / regenCDMax)));
+                g.setColor(new Color(120, 255, 120));
+                g.fillRect(barX, barY, (int) Math.round(barW * frac), barH);
+                g.setColor(Color.WHITE);
+                g.drawRect(barX, barY, barW, barH);
+                String cdText = String.format("CD: %.1fs", regenCD);
+                g.setFont(new Font("Monospaced", Font.PLAIN, Config.GameConfig.STATS_FONT - 4));
+                g.drawString(cdText, barX + barW + 8, barY + barH);
+            }
+        }
+
         int iconSize = Config.GameConfig.COOLDOWN_ICON_SIZE;
         int padding = Config.GameConfig.COOLDOWN_ICON_PADDING;
         int ox = panelWidth - padding - iconSize;
         int startY = Config.GameConfig.COOLDOWN_TOP_OFFSET;
         int spacing = Config.GameConfig.COOLDOWN_VERTICAL_SPACING;
 
-        // clear previous icon bounds/tooltips
         cooldownIconBounds.clear();
         cooldownIconTooltips.clear();
 
         int iconIndex = 0;
         UpgradeManager umgr = model.getUpgradeManager();
 
-        // Fire Ball
-        if (umgr.hasUpgrade("Fire Ball")) {
-            double fbCur = model.getFireBallCooldown();
-            double fbMax = model.getFireBallMaxCooldown();
-            double fbFrac = fbMax > 0 ? Math.max(0.0, Math.min(1.0, (fbMax - fbCur) / fbMax)) : 1.0;
+        for (Data.Upgrades.Upgrade u : umgr.getPlayerUpgrades()) {
             int y = startY + iconIndex * (iconSize + spacing);
 
-            boolean ready = fbCur <= 0.0;
-            if (ready) {
-                // faint glow when ready
-                g.setColor(new Color(255, 160, 40, 90));
-                int pad = 8;
-                g.fillOval(ox - pad, y - pad, iconSize + pad * 2, iconSize + pad * 2);
+            double maxCd;
+            if ("Wall".equals(u.getName())) {
+                maxCd = u.getParam2Value();
+            } else {
+                maxCd = u.getParam3Value();
             }
+            UpgradeManager.UpgradeId uid = umgr.idFor(u);
+            double curCd = uid != null ? model.getUpgradeCooldown(uid) : model.getUpgradeCooldown(u.getName());
 
-            // background box
-            g.setColor(Color.DARK_GRAY);
-            g.fillRoundRect(ox, y, iconSize, iconSize, 8, 8);
-
-            // progress overlay
-            g.setColor(new Color(255, 140, 0));
-            g.fillRoundRect(ox, y + (int) (iconSize * (1.0 - fbFrac)), iconSize, (int) (iconSize * fbFrac), 8, 8);
-
-            // fire glyph
-            int cx = ox + iconSize / 2;
-            int cy = y + iconSize / 2;
-            g.setColor(Color.WHITE);
-            g.fillOval(cx - 5, cy - 6, 10, 10);
-            g.setColor(new Color(255, 120, 0));
-            g.fillOval(cx - 4, cy - 5, 8, 8);
-
-            cooldownIconBounds.add(new Rectangle(ox, y, iconSize, iconSize));
-            String tipF = ready ? "Fire Ball — Ready" : String.format("Fire Ball — %.1fs", fbCur);
-            cooldownIconTooltips.add(tipF);
-
-            iconIndex++;
-        }
-
-        // Insect Spray
-        if (umgr.hasUpgrade("Insect Spray")) {
-            double isCur = model.getInsectSprayCooldown();
-            double isMax = model.getInsectSprayMaxCooldown();
-            double isFrac = isMax > 0 ? Math.max(0.0, Math.min(1.0, (isMax - isCur) / isMax)) : 1.0;
-            int y = startY + iconIndex * (iconSize + spacing);
-
-            boolean ready = isCur <= 0.0;
+            boolean ready = curCd <= 0.0;
             if (ready) {
-                g.setColor(new Color(80, 220, 80, 80));
-                int pad = 8;
+                g.setColor(new Color(200, 200, 255, 60));
+                int pad = 6;
                 g.fillOval(ox - pad, y - pad, iconSize + pad * 2, iconSize + pad * 2);
             }
 
             g.setColor(Color.DARK_GRAY);
             g.fillRoundRect(ox, y, iconSize, iconSize, 8, 8);
 
-            g.setColor(new Color(50, 150, 30));
-            g.fillRoundRect(ox, y + (int) (iconSize * (1.0 - isFrac)), iconSize, (int) (iconSize * isFrac), 8, 8);
-
-            // droplet glyph
-            int cx = ox + iconSize / 2;
-            int cy = y + iconSize / 2 - 2;
-            g.setColor(new Color(220, 255, 220));
-            int[] xs = {cx, cx - 5, cx + 5};
-            int[] ys = {cy - 8, cy + 6, cy + 6};
-            g.fillPolygon(xs, ys, 3);
-
-            cooldownIconBounds.add(new Rectangle(ox, y, iconSize, iconSize));
-            String tipI = ready ? "Insect Spray — Ready" : String.format("Insect Spray — %.1fs", isCur);
-            cooldownIconTooltips.add(tipI);
-
-            iconIndex++;
-        }
-
-        // Split Shot
-        if (umgr.hasUpgrade("Split Shot")) {
-            double ssCur = model.getSplitShotCooldown();
-            double ssMax = model.getSplitShotMaxCooldown();
-            double ssFrac = ssMax > 0 ? Math.max(0.0, Math.min(1.0, (ssMax - ssCur) / ssMax)) : 1.0;
-            int y = startY + iconIndex * (iconSize + spacing);
-
-            boolean ready = ssCur <= 0.0;
-            if (ready) {
-                g.setColor(new Color(120, 140, 255, 80));
-                int pad = 8;
-                g.fillOval(ox - pad, y - pad, iconSize + pad * 2, iconSize + pad * 2);
+            if (maxCd > 0) {
+                double frac = Math.max(0.0, Math.min(1.0, (maxCd - curCd) / maxCd));
+                g.setColor(new Color(120, 200, 255));
+                g.fillRoundRect(ox, y + (int) (iconSize * (1.0 - frac)), iconSize, (int) (iconSize * frac), 8, 8);
             }
 
-            g.setColor(Color.DARK_GRAY);
-            g.fillRoundRect(ox, y, iconSize, iconSize, 8, 8);
-            g.setColor(new Color(120, 120, 255));
-            g.fillRoundRect(ox, y + (int) (iconSize * (1.0 - ssFrac)), iconSize, (int) (iconSize * ssFrac), 8, 8);
-
-            // three small bullets glyph
-            int bx = ox + iconSize / 2 - 6;
-            int by = y + iconSize / 2;
-            g.setColor(Color.WHITE);
-            g.fillOval(bx, by - 3, 5, 5);
-            g.fillOval(bx + 6, by - 6, 5, 5);
-            g.fillOval(bx + 12, by - 3, 5, 5);
+            java.awt.image.BufferedImage img = u.getIconImage();
+            if (img != null) {
+                g.drawImage(img, ox, y, iconSize, iconSize, null);
+            } else {
+                g.setColor(Color.WHITE);
+                int fontSize = Math.max(10, iconSize / 2);
+                g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
+                FontMetrics fm = g.getFontMetrics();
+                String iconText = u.getIcon();
+                int tx = ox + (iconSize - fm.stringWidth(iconText)) / 2;
+                int ty = y + (iconSize + fm.getAscent()) / 2 - 2;
+                g.drawString(iconText, tx, ty);
+            }
 
             cooldownIconBounds.add(new Rectangle(ox, y, iconSize, iconSize));
-            String tipS = ready ? "Split Shot — Ready" : String.format("Split Shot — %.1fs", ssCur);
-            cooldownIconTooltips.add(tipS);
+            String tip = ready ? String.format("%s — Ready", u.getName()) : String.format("%s — %.1fs", u.getName(), curCd);
+            cooldownIconTooltips.add(tip);
 
             iconIndex++;
         }

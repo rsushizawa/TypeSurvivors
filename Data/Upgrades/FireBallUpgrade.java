@@ -17,6 +17,8 @@ public class FireBallUpgrade extends Upgrade {
             new Parameter("Letters Removed", 1.0, 1.0, ""), // Param 2: Letters
             new Parameter("Cooldown", 10.0, -0.75, "s")     // Param 3: Cooldown (negative increase)
         );
+        this.icon = "F";
+        this.setIconPath("Assets/Icons/Firestaff.png");
     }
 
 
