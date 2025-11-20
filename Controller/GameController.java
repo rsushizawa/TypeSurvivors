@@ -8,6 +8,8 @@ import java.awt.event.KeyEvent;
 
 import Model.GameModel;
 import View.GameView;
+import Entity.Enemy.EnemyProjectile;
+import Config.EnemyConfig;
 import Data.GameState;
 
 public class GameController extends KeyAdapter implements ActionListener {
@@ -63,6 +65,20 @@ public class GameController extends KeyAdapter implements ActionListener {
                 model.getGameState() == GameState.PAUSED) {
                 model.togglePause();
                 view.repaint();
+            }
+            return;
+        }
+
+        // DEBUG: spawn a test EnemyProjectile aimed at the player
+        if (keyCode == KeyEvent.VK_F9) {
+            if (model.getPlayer() != null) {
+                int px = model.getPlayer().x + (model.getPlayer().getSpriteWidth() / 2);
+                int py = model.getPlayer().y + (model.getPlayer().getSpriteHeight() / 2);
+                int startX = px;
+                int startY = py - 300;
+                Entity.Enemy.EnemyProjectile ep = new EnemyProjectile('z', startX, startY, px, py, EnemyConfig.LOUVADEUS_PROJECTILE_SPEED);
+                model.addEnemy(ep);
+                System.out.println("[DEBUG] Spawned test EnemyProjectile via F9");
             }
             return;
         }

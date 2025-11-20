@@ -19,8 +19,8 @@ public final class GameConfig {
     // Spawn / margins
     public static final int SPAWN_HORIZONTAL_BORDER = 50; // px margin from left/right when spawning
     public static final int MARGIN_SMALL = 20;
-    public static final int MARGIN_MEDIUM = 60;
-    public static final int MARGIN_LARGE = 120;
+    public static final int MARGIN_MEDIUM = 30;
+    public static final int MARGIN_LARGE = 30;
 
     // Bounce / easing
     public static final double BOUNCE_OVERSHOOT_REDUCTION = 0.5; // generic overshoot reduction factor
@@ -66,4 +66,6 @@ public final class GameConfig {
     public static final int TYPING_FONT = 22;
     public static final int STATS_FONT = 18;
     public static final int SMALL_FONT = 12;
+    // Enemy text fixed font size for readability
+    public static final int ENEMY_FONT_SIZE = 14;
 }

@@ -136,6 +136,8 @@ public class LouvaDeusEnemy extends Enemy {
                     int startY = this.y - (this.getScaledHeight() / 2);
                     // Spawn a mini-enemy projectile (single-letter) so it becomes targetable by typing
                     char letter = (char)('a' + random.nextInt(26));
+                    // Debug: print when spawning a mini-enemy
+                    System.out.println(String.format("[DEBUG] Louva spawning EnemyProjectile '%c' from (%d,%d) -> (%d,%d)", letter, startX, startY, targetX, targetY));
                     model.addEnemy(new EnemyProjectile(letter, startX, startY, targetX, targetY, Config.EnemyConfig.LOUVADEUS_PROJECTILE_SPEED));
                 }
             }
