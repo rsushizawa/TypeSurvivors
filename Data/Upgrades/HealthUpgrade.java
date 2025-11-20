@@ -16,9 +16,20 @@ public class HealthUpgrade extends Upgrade {
             new Parameter("Bonus Shield", 0.0, 0.0, ""),
             new Parameter("Cooldown", 0.0, 0.0, "s")
         );
+        this.icon = "H";
+        this.setIconPath("Assets/Icons/health.png");
     }
 
     @Override
     public void apply(GameModel model, Enemy target) {
+        int increase = (int) Math.round(getParam1Value());
+        if (increase > 0) {
+            model.increaseMaxLives(increase);
+        }
+
+        int bonusShield = (int) Math.round(getParam2Value());
+        if (bonusShield > 0) {
+            model.heal(bonusShield);
+        }
     }
 }

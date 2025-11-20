@@ -24,7 +24,8 @@ public class GameModel {
 
     private int score = 0;
     private int lives = 5;
-    private int playerLevel = 1; // player's level for XP progression
+    private int maxLives = 5;
+    private int playerLevel = 1;
     private GameState gameState = GameState.MAIN_MENU;
     private String playerName = "";
 
@@ -39,24 +40,24 @@ public class GameModel {
     private final ArrayList<Projectile> projectiles;
     private final ArrayList<GameObject.PoisonWall> poisonWalls = new ArrayList<>();
     private final ArrayList<GameObject.FireBallEffect> fireBallEffects = new ArrayList<>();
+    private final ArrayList<RegenEffect> regenEffects = new ArrayList<>();
     private final Random rand = new Random();
-    // Enemies spawned during update are queued here to avoid modifying the active list
     private final ArrayList<Enemy> pendingEnemies = new ArrayList<>();
     
     public static final int GAME_SPEED_MS = 16;
     public static final int MAX_NAME_LENGTH = 10;
-    
-    // Upgrade state fields
+
     private double fireBallCooldown = 0;
     private double insectSprayCooldown = 0;
     private double splitShotCooldown = 0;
     private double wallCooldown = 0;
     private double wallDuration = 0;
     private int wallYPosition = -1;
-    // Wrong-character shake effect
     private double wrongCharShakeTime = 0.0;
-    private final double WRONG_CHAR_SHAKE_DURATION = 0.35; // seconds
-    private final int WRONG_CHAR_SHAKE_AMPLITUDE = 8; // pixels
+    private final double WRONG_CHAR_SHAKE_DURATION = 0.35;
+    private final int WRONG_CHAR_SHAKE_AMPLITUDE = 8;
+    private double healthRegenCooldown = 0.0;
+    private double healthRegenMaxCooldown = 0.0;
 
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
@@ -73,6 +74,7 @@ public class GameModel {
     public void startNewGame() {
         score = 0;
         lives = 5;
+        maxLives = 5;
         playerLevel = 1;
         playerName = "";
         gameState = GameState.PLAYING;
@@ -81,10 +83,67 @@ public class GameModel {
         projectiles.clear();
         typingManager.reset();
         gameStats.reset();
-        
-        // Create a new UpgradeManager to reset all progress
-        // Or add a reset() method to UpgradeManager
-        // this.upgradeManager.reset(); 
+    
+    }
+
+    // --- Health APIs used by upgrades ---
+    public int getMaxLives() {
+        return maxLives;
+    }
+
+    public void increaseMaxLives(int amount) {
+        if (amount <= 0) return;
+        maxLives += amount;
+        // Optionally heal the player to reflect new max
+        if (lives < maxLives) lives = Math.min(maxLives, lives + amount);
+    }
+
+    public void heal(int amount) {
+        if (amount <= 0) return;
+        lives = Math.min(maxLives, lives + amount);
+    }
+
+    public void startHealthRegen(double hpPerSecond, double durationSeconds) {
+        // backward-compatible: no cooldown
+        startHealthRegen(hpPerSecond, durationSeconds, 0.0);
+    }
+
+    public void startHealthRegen(double hpPerSecond, double durationSeconds, double cooldownSeconds) {
+        if (hpPerSecond <= 0 || durationSeconds <= 0) return;
+        // enforce cooldown
+        if (healthRegenCooldown > 0) return;
+
+        regenEffects.add(new RegenEffect(hpPerSecond, durationSeconds));
+        if (cooldownSeconds > 0) {
+            healthRegenCooldown = cooldownSeconds;
+            healthRegenMaxCooldown = cooldownSeconds;
+        }
+    }
+
+    private static class RegenEffect {
+        double ratePerSecond;
+        double remainingSeconds;
+        double accumulator = 0.0; // fractional hp carried between ticks
+
+        RegenEffect(double ratePerSecond, double durationSeconds) {
+            this.ratePerSecond = ratePerSecond;
+            this.remainingSeconds = durationSeconds;
+        }
+
+        int tick(double deltaSeconds) {
+            if (remainingSeconds <= 0) return 0;
+            double effective = Math.min(deltaSeconds, remainingSeconds);
+            double hp = ratePerSecond * effective;
+            remainingSeconds -= effective;
+            accumulator += hp;
+            int toHeal = (int) Math.floor(accumulator);
+            accumulator -= toHeal;
+            return toHeal;
+        }
+
+        boolean isExpired() {
+            return remainingSeconds <= 0;
+        }
     }
 
     public void togglePause() {
@@ -136,7 +195,6 @@ public class GameModel {
     }
 
     public void updateGameState() {
-    // If level-up choice is open, skip updates
     if (gameState == GameState.LEVEL_UP_CHOICE) return;
         if (gameState != GameState.PLAYING) return;
 
@@ -150,25 +208,21 @@ public class GameModel {
             boolean removeProjectile = false;
 
             if (p.isEnemyOwned()) {
-                // Enemy-fired projectile: check collision with player
                 int px = player.x + (player.getSpriteWidth() / 2);
                 int py = player.y + (player.getSpriteHeight() / 2);
                 int dx = p.x - px;
                 int dy = p.y - py;
                 int pr = Math.max(8, player.getSpriteWidth() / 3);
                 if (dx * dx + dy * dy <= pr * pr) {
-                    // Hit player
                     removeProjectile = true;
                     loseLife();
                 }
             } else {
-                // Player-fired projectile: check collision with enemies
                 for (Enemy e : enemyManager.getEnemies()) {
                     int dx = p.x - e.x;
                     int dy = p.y - e.y;
                     int radius = Math.max(8, e.getScaledWidth() / 3);
                     if (dx * dx + dy * dy <= radius * radius) {
-                        // projectile hit an enemy -> remove projectile
                         removeProjectile = true;
                         break;
                     }
@@ -181,7 +235,6 @@ public class GameModel {
         }
         
         for (Enemy enemy : enemyManager.getEnemies()) {
-            // Update animations for normal enemies; for EnemyProjectile there are no sprites
             if (!(enemy instanceof Entity.Enemy.EnemyProjectile)) {
                 enemy.updateAnimation();
             }
@@ -191,58 +244,60 @@ public class GameModel {
             gameStats.incrementGameTicks();
         }
 
-    // Update upgrade cooldowns
-        double delta = GAME_SPEED_MS / 1000.0; // Time in seconds
+        double delta = GAME_SPEED_MS / 1000.0;
         if (fireBallCooldown > 0) fireBallCooldown -= delta;
         if (insectSprayCooldown > 0) insectSprayCooldown -= delta;
         if (splitShotCooldown > 0) splitShotCooldown -= delta;
         
-        // Handle Wall Logic
-        if (upgradeManager.hasUpgrade("Wall")) {
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) {
             if (wallCooldown > 0) {
                 wallCooldown -= delta;
-            } else if (wallDuration <= 0) { // Cooldown is done, wall not active
-                // Activate Wall
-                wallDuration = upgradeManager.getUpgrade("Wall").getParam1Value();
-                wallCooldown = upgradeManager.getUpgrade("Wall").getParam2Value();
-                // Position wall based on player and distance upgrade
-                wallYPosition = player.y - (int)upgradeManager.getUpgrade("Wall").getParam3Value();
             }
-            
+
             if (wallDuration > 0) {
                 wallDuration -= delta;
                 if (wallDuration <= 0) {
-                    wallYPosition = -1; // Deactivate
+                    wallYPosition = -1;
                 }
             }
         }
-        // --- End Upgrade Update ---
 
-    // Update poison walls
         for (GameObject.PoisonWall pw : new ArrayList<>(poisonWalls)) {
             pw.update(delta, enemyManager.getEnemies(), this);
             if (pw.isExpired()) {
                 poisonWalls.remove(pw);
             }
         }
-        // --- End Poison Walls ---
-    // Update fireball effects
         for (GameObject.FireBallEffect f : new ArrayList<>(fireBallEffects)) {
             f.update(delta);
             if (f.isExpired()) fireBallEffects.remove(f);
         }
-        // --- End FireBall Effects ---
 
-        // Update wrong-char shake timer
         if (wrongCharShakeTime > 0) {
             wrongCharShakeTime = Math.max(0.0, wrongCharShakeTime - delta);
+        }
+
+        if (!regenEffects.isEmpty()) {
+            ArrayList<RegenEffect> expired = new ArrayList<>();
+            for (RegenEffect r : regenEffects) {
+                int healed = r.tick(delta);
+                if (healed > 0) {
+                    heal(healed);
+                }
+                if (r.isExpired()) expired.add(r);
+            }
+            regenEffects.removeAll(expired);
+        }
+
+        if (healthRegenCooldown > 0) {
+            healthRegenCooldown = Math.max(0.0, healthRegenCooldown - delta);
         }
 
 
         if (waveManager.update()) {
             score += 100;
-            if (upgradeManager.hasUpgrade("Health Regen")) {
-                if (lives < 5) { // Assuming 5 is max lives
+            if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN)) {
+                if (lives < 5) {
                     lives++;
                 }
             }
@@ -271,14 +326,26 @@ public class GameModel {
         }
     }
 
+    public boolean tryActivateWall() {
+    if (!upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) return false;
+        if (wallDuration > 0) return false; 
+        if (wallCooldown > 0) return false; 
+
+    Upgrade wall = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.WALL);
+        if (wall == null) return false;
+
+        this.wallDuration = wall.getParam1Value();
+        this.wallCooldown = wall.getParam2Value();
+        this.wallYPosition = player.y - (int) wall.getParam3Value();
+        return true;
+    }
+
     private void updateAndCheckLostEnemies() {
-        // Pass wall position to enemy manager
         ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(isWallActive() ? wallYPosition : -1, this);
         for (Enemy lostEnemy : lostEnemies) {
             loseLife();
             typingManager.checkTargetLost(lostEnemy);
         }
-        // Append any newly queued enemies (spawned during enemy updates)
         if (!pendingEnemies.isEmpty()) {
             enemyManager.getEnemies().addAll(pendingEnemies);
             pendingEnemies.clear();
@@ -313,12 +380,11 @@ public class GameModel {
             gameStats.incrementCharsTyped(1);
             
             // Split shot logic
-            if (upgradeManager.hasUpgrade("Split Shot") && splitShotCooldown <= 0) {
-                Upgrade splitShot = upgradeManager.getUpgrade("Split Shot");
+            if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT) && splitShotCooldown <= 0) {
+                Upgrade splitShot = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT);
                 int numProjectiles = (int) splitShot.getParam1Value();
                 for (int i = 0; i < numProjectiles; i++) {
-                    // Spawn projectiles with a slight random offset
-                    int randomTargetX = targetToShootAt.x + rand.nextInt(41) - 20; // -20 to +20 offset
+                    int randomTargetX = targetToShootAt.x + rand.nextInt(41) - 20; 
                     int randomTargetY = targetToShootAt.y - (targetToShootAt.getScaledHeight() / 2) + rand.nextInt(41) - 20;
                     
                     projectiles.add(new Projectile(player.x, player.y, randomTargetX, randomTargetY, 1));
@@ -326,65 +392,63 @@ public class GameModel {
                 AudioManager.playProjectileSfx();
                 splitShotCooldown = splitShot.getParam3Value();
             } else {
-                spawnProjectile(targetToShootAt); // Normal shot
+                spawnProjectile(targetToShootAt);
             }
             
         } else if (result == TypingResult.DESTROYED) {
             gameStats.incrementCharsTyped(1);
-            spawnProjectile(targetToShootAt); // The killing shot
+            spawnProjectile(targetToShootAt);
             
             if (targetToShootAt != null) {
-                // Upgrade triggers on kill
-                // 1. Add XP
                 int xp = targetToShootAt.originalText.length();
-                if (upgradeManager.hasUpgrade("Tome of Greed")) {
-                    xp *= (1 + upgradeManager.getUpgrade("Tome of Greed").getParam1Value() / 100.0);
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.XP_TOME)) {
+                    Upgrade tome = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.XP_TOME);
+                    if (tome != null) xp *= (1 + tome.getParam1Value() / 100.0);
                 }
-                upgradeManager.addXP(xp); // Add XP
+                upgradeManager.addXP(xp);
                 
-                // 2. Fire Ball Logic (moved to upgrade class)
-                if (upgradeManager.hasUpgrade("Fire Ball") && fireBallCooldown <= 0) {
-                    upgradeManager.getUpgrade("Fire Ball").apply(this, targetToShootAt);
-                    fireBallCooldown = upgradeManager.getUpgrade("Fire Ball").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.FIRE_BALL) && fireBallCooldown <= 0) {
+                    Upgrade fb = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.FIRE_BALL);
+                    if (fb != null) {
+                        fb.apply(this, targetToShootAt);
+                        fireBallCooldown = fb.getParam3Value();
+                    }
                 }
 
-                // 3. Insect Spray Logic (moved to upgrade class)
-                if (upgradeManager.hasUpgrade("Insect Spray") && insectSprayCooldown <= 0) {
-                    upgradeManager.getUpgrade("Insect Spray").apply(this, targetToShootAt);
-                    insectSprayCooldown = upgradeManager.getUpgrade("Insect Spray").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY) && insectSprayCooldown <= 0) {
+                    Upgrade is = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY);
+                    if (is != null) {
+                        is.apply(this, targetToShootAt);
+                        insectSprayCooldown = is.getParam3Value();
+                    }
                 }
 
                 // 4. Score
                 double scoreIncrease = targetToShootAt.originalText.length();
-                if (upgradeManager.hasUpgrade("Tome of Greed")) {
-                     scoreIncrease *= (1 + upgradeManager.getUpgrade("Tome of Greed").getParam2Value() / 100.0);
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.XP_TOME)) {
+                     Upgrade t = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.XP_TOME);
+                     if (t != null) scoreIncrease *= (1 + t.getParam2Value() / 100.0);
                 }
-                if (upgradeManager.hasUpgrade("Health Regen")) {
-                    scoreIncrease += upgradeManager.getUpgrade("Health Regen").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN)) {
+                    Upgrade hr = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN);
+                    if (hr != null) scoreIncrease += hr.getParam3Value();
                 }
                 score += scoreIncrease;
                 
-                // If the killed enemy was the current typing target, reset typing UI
                 resetTypingIfTarget(targetToShootAt);
                 enemyManager.removeEnemy(targetToShootAt);
             }
         }
             else if (result == TypingResult.MISS) {
-                // Play wrong-character feedback (sound + shake)
-                AudioManager.playWrongCharSfx();
+                AudioManager.playWrongKeySfx();
                 wrongCharShakeTime = WRONG_CHAR_SHAKE_DURATION;
             }
         
-    // Check if we leveled up and need to show the screen
         if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
              this.playerLevel = upgradeManager.getPlayerLevel();
              gameState = GameState.LEVEL_UP_CHOICE;
         }
     }
-    
-    // Note: upgrade-specific effects were moved into the upgrade classes themselves.
-    
-    // --- End methods ---
 
 
     public void backspaceTypedWord() {
@@ -400,6 +464,28 @@ public class GameModel {
 
     public int getLives() {
         return lives;
+    }
+
+    // Regen status helpers for HUD
+    public double getActiveRegenRate() {
+        double total = 0.0;
+        for (RegenEffect r : regenEffects) total += r.ratePerSecond;
+        return total;
+    }
+
+    public double getActiveRegenRemaining() {
+        double max = 0.0;
+        for (RegenEffect r : regenEffects) max = Math.max(max, r.remainingSeconds);
+        return max;
+    }
+
+    // Regen cooldown getters for HUD
+    public double getHealthRegenCooldown() {
+        return healthRegenCooldown;
+    }
+
+    public double getHealthRegenMaxCooldown() {
+        return healthRegenMaxCooldown;
     }
 
     public GameState getGameState() {
@@ -423,9 +509,7 @@ public class GameModel {
         return enemyManager.getEnemies();
     }
 
-    /** Add an enemy to the world (used by effects that spawn mini-enemies/projectiles). */
     public void addEnemy(Enemy e) {
-        // Queue new enemies to be appended after the current update loop completes
         pendingEnemies.add(e);
     }
     
@@ -469,41 +553,33 @@ public class GameModel {
         return leaderboardManager;
     }
     
-    // --- NEW GETTERS for Upgrades ---
     
     public UpgradeManager getUpgradeManager() {
         return upgradeManager;
     }
 
-    /** Returns the active poison walls. */
     public ArrayList<GameObject.PoisonWall> getPoisonWalls() {
         return poisonWalls;
     }
     
-    // --- Helpers used by upgrade.apply(...) implementations ---
-    /** Remove an enemy from the game (forward to the enemy manager). */
     public void removeEnemy(Enemy e) {
         enemyManager.removeEnemy(e);
     }
 
-    /** Add to the player's score. */
     public void addScore(int amount) {
         this.score += amount;
     }
 
-    /** If the typing target is the given enemy, reset the typing manager. */
     public void resetTypingIfTarget(Enemy e) {
         if (typingManager.getTargetEnemy() == e) {
             typingManager.reset();
         }
     }
 
-    /** Create & add a poison wall at the specified location. */
     public void createPoisonWall(int x, int y, double height, double width, double durationSeconds, double lettersPerSecond, double slowFactor) {
         poisonWalls.add(new GameObject.PoisonWall(x, y, height, width, durationSeconds, lettersPerSecond, slowFactor));
     }
 
-    /** Create & add a FireBall visual effect. */
     public void createFireBallEffect(int x, int y, double radius, double durationSeconds) {
         fireBallEffects.add(new GameObject.FireBallEffect(x, y, radius, durationSeconds));
     }
@@ -512,21 +588,54 @@ public class GameModel {
         return fireBallEffects;
     }
 
-    // Cooldown getters for UI
     public double getFireBallCooldown() { return fireBallCooldown; }
+        
     public double getInsectSprayCooldown() { return insectSprayCooldown; }
     public double getSplitShotCooldown() { return splitShotCooldown; }
 
+    public double getUpgradeCooldown(String upgradeName) {
+        switch (upgradeName) {
+            case "Fire Ball": return fireBallCooldown;
+            case "Insect Spray": return insectSprayCooldown;
+            case "Split Shot": return splitShotCooldown;
+            case "Wall": return wallCooldown;
+            case "Health Regen": return healthRegenCooldown;
+            default: return 0.0;
+        }
+    }
+
+    // Enum-based overload for safer access
+    public double getUpgradeCooldown(Manager.UpgradeManager.UpgradeId id) {
+        if (id == null) return 0.0;
+        switch (id) {
+            case FIRE_BALL: return fireBallCooldown;
+            case INSECT_SPRAY: return insectSprayCooldown;
+            case SPLIT_SHOT: return splitShotCooldown;
+            case WALL: return wallCooldown;
+            case HEALTH_REGEN: return healthRegenCooldown;
+            default: return 0.0;
+        }
+    }
+
     public double getFireBallMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Fire Ball")) return upgradeManager.getUpgrade("Fire Ball").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.FIRE_BALL)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.FIRE_BALL);
+            if (u != null) return u.getParam3Value();
+        }
         return 10.0;
     }
     public double getInsectSprayMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Insect Spray")) return upgradeManager.getUpgrade("Insect Spray").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY);
+            if (u != null) return u.getParam3Value();
+        }
         return 15.0;
     }
     public double getSplitShotMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Split Shot")) return upgradeManager.getUpgrade("Split Shot").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT);
+            if (u != null) return u.getParam3Value();
+        }
         return 5.0;
     }
     
@@ -538,14 +647,12 @@ public class GameModel {
         return wallYPosition;
     }
 
-    /** Returns the current horizontal shake offset (in pixels) for wrong-char feedback. */
     public int getShakeOffsetX() {
         if (wrongCharShakeTime <= 0) return 0;
-        double progress = 1.0 - (wrongCharShakeTime / WRONG_CHAR_SHAKE_DURATION); // 0..1
-        // oscillate several times and decay
+        double progress = 1.0 - (wrongCharShakeTime / WRONG_CHAR_SHAKE_DURATION);
         double oscillations = 6.0;
         double angle = progress * Math.PI * 2.0 * oscillations;
-        double decay = 1.0 - progress; // linear decay
+        double decay = 1.0 - progress;
         return (int) Math.round(Math.sin(angle) * WRONG_CHAR_SHAKE_AMPLITUDE * decay);
     }
 }

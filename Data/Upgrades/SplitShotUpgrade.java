@@ -16,6 +16,8 @@ public class SplitShotUpgrade extends Upgrade {
             new Parameter("Spread", 45.0, -2.0, "deg"),
             new Parameter("Cooldown", 8.0, -0.5, "s")
         );
+        this.icon = "S";
+        this.setIconPath("Assets/Icons/split_shot.png");
     }
 
     @Override

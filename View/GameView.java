@@ -29,7 +29,13 @@ public class GameView {
 		frame.setVisible(true);
 
 		gamePanel.setFocusable(true);
-		gamePanel.requestFocusInWindow();
+		SwingUtilities.invokeLater(() -> gamePanel.requestFocusInWindow());
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowActivated(java.awt.event.WindowEvent e) {
+				gamePanel.requestFocusInWindow();
+			}
+		});
 	}
 
 	public void addGameKeyListener(KeyListener listener) {

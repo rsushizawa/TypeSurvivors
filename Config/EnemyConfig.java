@@ -32,7 +32,7 @@ public final class EnemyConfig {
 
 	// LouvaDeus (mantis) specific defaults
 	// How many seconds after spawn before the mantis stops and performs its attack
-	public static final double LOUVADEUS_ATTACK_DELAY_SECONDS = 3.0;
+	public static final double LOUVADEUS_ATTACK_DELAY_SECONDS = 7.0;
 
 	// Number of projectiles (letters) the mantis will launch at the player when attacking
 	public static final int LOUVADEUS_ATTACK_PROJECTILES = 1;
@@ -44,7 +44,7 @@ public final class EnemyConfig {
 	public static final double ENEMY_HIT_PUSHBACK = 0.008;
     
 	// Cooldown (in seconds) between subsequent attacks for LouvaDeus. Set to <= 0 for a single attack only.
-	public static final double LOUVADEUS_ATTACK_COOLDOWN_SECONDS = 2.0;
+	public static final double LOUVADEUS_ATTACK_COOLDOWN_SECONDS = 6.0;
 
 	// Maximum number of attacks per spawn. -1 = unlimited / keep attacking every cooldown.
 	public static final int LOUVADEUS_MAX_ATTACKS = -1;

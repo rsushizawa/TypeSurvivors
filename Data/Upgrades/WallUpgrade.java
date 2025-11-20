@@ -10,5 +10,7 @@ public class WallUpgrade extends Upgrade {
             new Parameter("Duration", UpgradeConfig.WALL_BASE_DURATION, UpgradeConfig.WALL_DURATION_PER_LEVEL, "s"),
             new Parameter("Cooldown", UpgradeConfig.WALL_BASE_COOLDOWN, UpgradeConfig.WALL_COOLDOWN_PER_LEVEL, "s"),
             new Parameter("Distance", UpgradeConfig.WALL_BASE_DISTANCE, UpgradeConfig.WALL_DISTANCE_PER_LEVEL, "px"));
+        this.icon = "W";
+        this.setIconPath("Assets/Icons/Aura.png");
     }
 }

@@ -27,11 +27,9 @@ public class EnemyProjectile extends Enemy {
 
     @Override
     public void update() {
-        // Move in screen space
         this.x += vx;
         this.y += vy;
 
-        // Mark expired if offscreen
         if (this.x < -50 || this.x > TypeSurvivors.TypeSurvivors.gameWidth + 50 || this.y < -50 || this.y > TypeSurvivors.TypeSurvivors.gameHeight + 50) {
             this.expired = true;
         }
