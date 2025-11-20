@@ -3,6 +3,10 @@ package Data.Upgrades; // You'll want a new package for all the upgrade classes
 import Data.UpgradeType;
 import Data.Parameter;
 import java.util.Random;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 
 public abstract class Upgrade {
     
@@ -16,9 +20,30 @@ public abstract class Upgrade {
     protected Parameter param3;
     
     protected static final Random rand = new Random();
+    protected String icon = "?";
 
-    public Upgrade(String name, UpgradeType type, String description, 
-                   Parameter param1, Parameter param2, Parameter param3) {
+    protected String iconPath = null;
+    protected transient BufferedImage iconImage = null;
+
+    public String getIcon() { return icon != null ? icon : "?"; }
+    public String getIconPath() { return iconPath; }
+    public void setIconPath(String path) { this.iconPath = path; this.iconImage = null; }
+
+    public BufferedImage getIconImage() {
+        if (iconImage != null) return iconImage;
+        if (iconPath == null) return null;
+        try {
+            File f = new File(iconPath);
+            if (!f.exists()) return null;
+            iconImage = ImageIO.read(f);
+            return iconImage;
+        } catch (IOException ex) {
+            iconImage = null;
+            return null;
+        }
+    }
+
+    public Upgrade(String name, UpgradeType type, String description, Parameter param1, Parameter param2, Parameter param3) {
         this.level = 0;
         this.name = name;
         this.type = type;

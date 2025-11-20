@@ -47,7 +47,7 @@ public final class GameConfig {
     public static final int FIREBALL_MAX_RADIUS = 80; // px visual cap
 
     // Cooldown visuals
-    public static final int COOLDOWN_ICON_SIZE = 36; // px square
+    public static final int COOLDOWN_ICON_SIZE = 32; // px square
     public static final int COOLDOWN_ICON_PADDING = 8; // px from corner
     public static final int COOLDOWN_TOP_OFFSET = 150; // px from top to start stacking cooldown icons
     public static final int COOLDOWN_VERTICAL_SPACING = 8; // px between stacked cooldown icons

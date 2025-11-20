@@ -13,12 +13,22 @@ import java.util.stream.Collectors;
 public class UpgradeManager {
 
     private int playerLevel = 1;
-    private int playerXP = 0;
-    private int xpToNextLevel = 100; // Example starting value
+    private int playerXP = 1000;
+    private int xpToNextLevel = 100;
 
-    private final Map<String, Upgrade> allUpgrades = new HashMap<>();
-    
-    private final Map<String, Upgrade> playerUpgrades = new HashMap<>();
+    public enum UpgradeId {
+        FIRE_BALL,
+        INSECT_SPRAY,
+        SPLIT_SHOT,
+        WALL,
+        HEALTH_REGEN,
+        HEALTH_UPGRADE,
+        XP_TOME
+    }
+
+    private final Map<UpgradeId, Upgrade> allUpgrades = new HashMap<>();
+
+    private final Map<UpgradeId, Upgrade> playerUpgrades = new HashMap<>();
 
     private final List<Upgrade> currentLevelUpOffer = new ArrayList<>();
     
@@ -33,25 +43,29 @@ public class UpgradeManager {
         initializeAllUpgrades();
     }
 
+    public java.util.List<Upgrade> getPlayerUpgrades() {
+        return new ArrayList<>(playerUpgrades.values());
+    }
+
     private void initializeAllUpgrades() {
         // --- WEAPONS ---
-        allUpgrades.put("Fire Ball", new FireBallUpgrade());
-        allUpgrades.put("Insect Spray", new InsectSprayUpgrade());
-        allUpgrades.put("Split Shot", new SplitShotUpgrade());
+        allUpgrades.put(UpgradeId.FIRE_BALL, new FireBallUpgrade());
+        allUpgrades.put(UpgradeId.INSECT_SPRAY, new InsectSprayUpgrade());
+        allUpgrades.put(UpgradeId.SPLIT_SHOT, new SplitShotUpgrade());
 
         // --- UTILITY ---
-        allUpgrades.put("Wall", new WallUpgrade());
-        allUpgrades.put("Health Regen", new HealthRegenUpgrade());
-        allUpgrades.put("Health Upgrade", new HealthUpgrade());
+        allUpgrades.put(UpgradeId.WALL, new WallUpgrade());
+        allUpgrades.put(UpgradeId.HEALTH_REGEN, new HealthRegenUpgrade());
+        allUpgrades.put(UpgradeId.HEALTH_UPGRADE, new HealthUpgrade());
 
         // --- TOMB ---
-        allUpgrades.put("Tome of Greed", new TomeOfGreedUpgrade());
+        allUpgrades.put(UpgradeId.XP_TOME, new XpTomeUpgrade());
     }
     
     public void addXP(int amount) {
         if (isPoolLocked && playerLevel >= 30) return;
         
-        playerXP += amount;
+        playerXP += amount * 1.5;
         if (playerXP >= xpToNextLevel) {
             levelUp();
         }
@@ -108,8 +122,9 @@ public class UpgradeManager {
         Upgrade chosen = currentLevelUpOffer.get(choiceIndex);
         chosen.levelUp();
         
-        if (!playerUpgrades.containsKey(chosen.name)) {
-            playerUpgrades.put(chosen.name, chosen);
+        UpgradeId chosenId = idFor(chosen);
+        if (chosenId != null && !playerUpgrades.containsKey(chosenId)) {
+            playerUpgrades.put(chosenId, chosen);
         }
 
         // Check for locking
@@ -127,9 +142,12 @@ public class UpgradeManager {
             if (chosenWeapon != null && chosenUtil != null && chosenTomb != null) {
                 isPoolLocked = true;
                 playerUpgrades.clear();
-                playerUpgrades.put(chosenWeapon.name, chosenWeapon);
-                playerUpgrades.put(chosenUtil.name, chosenUtil);
-                playerUpgrades.put(chosenTomb.name, chosenTomb);
+                UpgradeId wId = idFor(chosenWeapon);
+                UpgradeId uId = idFor(chosenUtil);
+                UpgradeId tId = idFor(chosenTomb);
+                if (wId != null) playerUpgrades.put(wId, chosenWeapon);
+                if (uId != null) playerUpgrades.put(uId, chosenUtil);
+                if (tId != null) playerUpgrades.put(tId, chosenTomb);
             }
         }
     }
@@ -149,10 +167,35 @@ public class UpgradeManager {
     public int getXPToNextLevel() { return xpToNextLevel; }
     
     public Upgrade getUpgrade(String name) {
-        return playerUpgrades.get(name);
+        UpgradeId id = nameToId(name);
+        return id == null ? null : playerUpgrades.get(id);
     }
     
     public boolean hasUpgrade(String name) {
-        return playerUpgrades.containsKey(name);
+        UpgradeId id = nameToId(name);
+        return id != null && playerUpgrades.containsKey(id);
+    }
+
+    // Enum-based accessors
+    public Upgrade getUpgrade(UpgradeId id) {
+        return playerUpgrades.get(id);
+    }
+
+    public boolean hasUpgrade(UpgradeId id) {
+        return playerUpgrades.containsKey(id);
+    }
+
+    private UpgradeId nameToId(String name) {
+        for (Map.Entry<UpgradeId, Upgrade> e : allUpgrades.entrySet()) {
+            if (e.getValue().getName().equals(name)) return e.getKey();
+        }
+        return null;
+    }
+
+    public UpgradeId idFor(Upgrade u) {
+        for (Map.Entry<UpgradeId, Upgrade> e : allUpgrades.entrySet()) {
+            if (e.getValue().getName().equals(u.getName())) return e.getKey();
+        }
+        return null;
     }
 }

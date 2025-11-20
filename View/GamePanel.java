@@ -32,8 +32,7 @@ public class GamePanel extends JPanel {
         this.model = model;
         setToolTipText("");
 
-        // Clicking the game panel should request keyboard focus so key events
-        // (typing / debug keys) are received even if the window lost focus.
+        setFocusTraversalKeysEnabled(false);
         this.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {

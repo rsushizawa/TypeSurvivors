@@ -24,6 +24,7 @@ public class GameModel {
 
     private int score = 0;
     private int lives = 5;
+    private int maxLives = 5;
     private int playerLevel = 1;
     private GameState gameState = GameState.MAIN_MENU;
     private String playerName = "";
@@ -39,6 +40,7 @@ public class GameModel {
     private final ArrayList<Projectile> projectiles;
     private final ArrayList<GameObject.PoisonWall> poisonWalls = new ArrayList<>();
     private final ArrayList<GameObject.FireBallEffect> fireBallEffects = new ArrayList<>();
+    private final ArrayList<RegenEffect> regenEffects = new ArrayList<>();
     private final Random rand = new Random();
     private final ArrayList<Enemy> pendingEnemies = new ArrayList<>();
     
@@ -54,6 +56,8 @@ public class GameModel {
     private double wrongCharShakeTime = 0.0;
     private final double WRONG_CHAR_SHAKE_DURATION = 0.35;
     private final int WRONG_CHAR_SHAKE_AMPLITUDE = 8;
+    private double healthRegenCooldown = 0.0;
+    private double healthRegenMaxCooldown = 0.0;
 
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
@@ -70,6 +74,7 @@ public class GameModel {
     public void startNewGame() {
         score = 0;
         lives = 5;
+        maxLives = 5;
         playerLevel = 1;
         playerName = "";
         gameState = GameState.PLAYING;
@@ -79,6 +84,66 @@ public class GameModel {
         typingManager.reset();
         gameStats.reset();
     
+    }
+
+    // --- Health APIs used by upgrades ---
+    public int getMaxLives() {
+        return maxLives;
+    }
+
+    public void increaseMaxLives(int amount) {
+        if (amount <= 0) return;
+        maxLives += amount;
+        // Optionally heal the player to reflect new max
+        if (lives < maxLives) lives = Math.min(maxLives, lives + amount);
+    }
+
+    public void heal(int amount) {
+        if (amount <= 0) return;
+        lives = Math.min(maxLives, lives + amount);
+    }
+
+    public void startHealthRegen(double hpPerSecond, double durationSeconds) {
+        // backward-compatible: no cooldown
+        startHealthRegen(hpPerSecond, durationSeconds, 0.0);
+    }
+
+    public void startHealthRegen(double hpPerSecond, double durationSeconds, double cooldownSeconds) {
+        if (hpPerSecond <= 0 || durationSeconds <= 0) return;
+        // enforce cooldown
+        if (healthRegenCooldown > 0) return;
+
+        regenEffects.add(new RegenEffect(hpPerSecond, durationSeconds));
+        if (cooldownSeconds > 0) {
+            healthRegenCooldown = cooldownSeconds;
+            healthRegenMaxCooldown = cooldownSeconds;
+        }
+    }
+
+    private static class RegenEffect {
+        double ratePerSecond;
+        double remainingSeconds;
+        double accumulator = 0.0; // fractional hp carried between ticks
+
+        RegenEffect(double ratePerSecond, double durationSeconds) {
+            this.ratePerSecond = ratePerSecond;
+            this.remainingSeconds = durationSeconds;
+        }
+
+        int tick(double deltaSeconds) {
+            if (remainingSeconds <= 0) return 0;
+            double effective = Math.min(deltaSeconds, remainingSeconds);
+            double hp = ratePerSecond * effective;
+            remainingSeconds -= effective;
+            accumulator += hp;
+            int toHeal = (int) Math.floor(accumulator);
+            accumulator -= toHeal;
+            return toHeal;
+        }
+
+        boolean isExpired() {
+            return remainingSeconds <= 0;
+        }
     }
 
     public void togglePause() {
@@ -184,8 +249,7 @@ public class GameModel {
         if (insectSprayCooldown > 0) insectSprayCooldown -= delta;
         if (splitShotCooldown > 0) splitShotCooldown -= delta;
         
-        // Handle Wall Logic
-        if (upgradeManager.hasUpgrade("Wall")) {
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) {
             if (wallCooldown > 0) {
                 wallCooldown -= delta;
             }
@@ -213,10 +277,26 @@ public class GameModel {
             wrongCharShakeTime = Math.max(0.0, wrongCharShakeTime - delta);
         }
 
+        if (!regenEffects.isEmpty()) {
+            ArrayList<RegenEffect> expired = new ArrayList<>();
+            for (RegenEffect r : regenEffects) {
+                int healed = r.tick(delta);
+                if (healed > 0) {
+                    heal(healed);
+                }
+                if (r.isExpired()) expired.add(r);
+            }
+            regenEffects.removeAll(expired);
+        }
+
+        if (healthRegenCooldown > 0) {
+            healthRegenCooldown = Math.max(0.0, healthRegenCooldown - delta);
+        }
+
 
         if (waveManager.update()) {
             score += 100;
-            if (upgradeManager.hasUpgrade("Health Regen")) {
+            if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN)) {
                 if (lives < 5) {
                     lives++;
                 }
@@ -247,11 +327,11 @@ public class GameModel {
     }
 
     public boolean tryActivateWall() {
-        if (!upgradeManager.hasUpgrade("Wall")) return false;
-        if (wallDuration > 0) return false; // already active
-        if (wallCooldown > 0) return false; // still cooling down
+    if (!upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) return false;
+        if (wallDuration > 0) return false; 
+        if (wallCooldown > 0) return false; 
 
-    Upgrade wall = upgradeManager.getUpgrade("Wall");
+    Upgrade wall = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.WALL);
         if (wall == null) return false;
 
         this.wallDuration = wall.getParam1Value();
@@ -300,8 +380,8 @@ public class GameModel {
             gameStats.incrementCharsTyped(1);
             
             // Split shot logic
-            if (upgradeManager.hasUpgrade("Split Shot") && splitShotCooldown <= 0) {
-                Upgrade splitShot = upgradeManager.getUpgrade("Split Shot");
+            if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT) && splitShotCooldown <= 0) {
+                Upgrade splitShot = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT);
                 int numProjectiles = (int) splitShot.getParam1Value();
                 for (int i = 0; i < numProjectiles; i++) {
                     int randomTargetX = targetToShootAt.x + rand.nextInt(41) - 20; 
@@ -321,28 +401,37 @@ public class GameModel {
             
             if (targetToShootAt != null) {
                 int xp = targetToShootAt.originalText.length();
-                if (upgradeManager.hasUpgrade("Tome of Greed")) {
-                    xp *= (1 + upgradeManager.getUpgrade("Tome of Greed").getParam1Value() / 100.0);
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.XP_TOME)) {
+                    Upgrade tome = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.XP_TOME);
+                    if (tome != null) xp *= (1 + tome.getParam1Value() / 100.0);
                 }
                 upgradeManager.addXP(xp);
                 
-                if (upgradeManager.hasUpgrade("Fire Ball") && fireBallCooldown <= 0) {
-                    upgradeManager.getUpgrade("Fire Ball").apply(this, targetToShootAt);
-                    fireBallCooldown = upgradeManager.getUpgrade("Fire Ball").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.FIRE_BALL) && fireBallCooldown <= 0) {
+                    Upgrade fb = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.FIRE_BALL);
+                    if (fb != null) {
+                        fb.apply(this, targetToShootAt);
+                        fireBallCooldown = fb.getParam3Value();
+                    }
                 }
 
-                if (upgradeManager.hasUpgrade("Insect Spray") && insectSprayCooldown <= 0) {
-                    upgradeManager.getUpgrade("Insect Spray").apply(this, targetToShootAt);
-                    insectSprayCooldown = upgradeManager.getUpgrade("Insect Spray").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY) && insectSprayCooldown <= 0) {
+                    Upgrade is = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY);
+                    if (is != null) {
+                        is.apply(this, targetToShootAt);
+                        insectSprayCooldown = is.getParam3Value();
+                    }
                 }
 
                 // 4. Score
                 double scoreIncrease = targetToShootAt.originalText.length();
-                if (upgradeManager.hasUpgrade("Tome of Greed")) {
-                     scoreIncrease *= (1 + upgradeManager.getUpgrade("Tome of Greed").getParam2Value() / 100.0);
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.XP_TOME)) {
+                     Upgrade t = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.XP_TOME);
+                     if (t != null) scoreIncrease *= (1 + t.getParam2Value() / 100.0);
                 }
-                if (upgradeManager.hasUpgrade("Health Regen")) {
-                    scoreIncrease += upgradeManager.getUpgrade("Health Regen").getParam3Value();
+                if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN)) {
+                    Upgrade hr = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.HEALTH_REGEN);
+                    if (hr != null) scoreIncrease += hr.getParam3Value();
                 }
                 score += scoreIncrease;
                 
@@ -351,7 +440,7 @@ public class GameModel {
             }
         }
             else if (result == TypingResult.MISS) {
-                AudioManager.playWrongCharSfx();
+                AudioManager.playWrongKeySfx();
                 wrongCharShakeTime = WRONG_CHAR_SHAKE_DURATION;
             }
         
@@ -375,6 +464,28 @@ public class GameModel {
 
     public int getLives() {
         return lives;
+    }
+
+    // Regen status helpers for HUD
+    public double getActiveRegenRate() {
+        double total = 0.0;
+        for (RegenEffect r : regenEffects) total += r.ratePerSecond;
+        return total;
+    }
+
+    public double getActiveRegenRemaining() {
+        double max = 0.0;
+        for (RegenEffect r : regenEffects) max = Math.max(max, r.remainingSeconds);
+        return max;
+    }
+
+    // Regen cooldown getters for HUD
+    public double getHealthRegenCooldown() {
+        return healthRegenCooldown;
+    }
+
+    public double getHealthRegenMaxCooldown() {
+        return healthRegenMaxCooldown;
     }
 
     public GameState getGameState() {
@@ -478,19 +589,53 @@ public class GameModel {
     }
 
     public double getFireBallCooldown() { return fireBallCooldown; }
+        
     public double getInsectSprayCooldown() { return insectSprayCooldown; }
     public double getSplitShotCooldown() { return splitShotCooldown; }
 
+    public double getUpgradeCooldown(String upgradeName) {
+        switch (upgradeName) {
+            case "Fire Ball": return fireBallCooldown;
+            case "Insect Spray": return insectSprayCooldown;
+            case "Split Shot": return splitShotCooldown;
+            case "Wall": return wallCooldown;
+            case "Health Regen": return healthRegenCooldown;
+            default: return 0.0;
+        }
+    }
+
+    // Enum-based overload for safer access
+    public double getUpgradeCooldown(Manager.UpgradeManager.UpgradeId id) {
+        if (id == null) return 0.0;
+        switch (id) {
+            case FIRE_BALL: return fireBallCooldown;
+            case INSECT_SPRAY: return insectSprayCooldown;
+            case SPLIT_SHOT: return splitShotCooldown;
+            case WALL: return wallCooldown;
+            case HEALTH_REGEN: return healthRegenCooldown;
+            default: return 0.0;
+        }
+    }
+
     public double getFireBallMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Fire Ball")) return upgradeManager.getUpgrade("Fire Ball").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.FIRE_BALL)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.FIRE_BALL);
+            if (u != null) return u.getParam3Value();
+        }
         return 10.0;
     }
     public double getInsectSprayMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Insect Spray")) return upgradeManager.getUpgrade("Insect Spray").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.INSECT_SPRAY);
+            if (u != null) return u.getParam3Value();
+        }
         return 15.0;
     }
     public double getSplitShotMaxCooldown() {
-        if (upgradeManager.hasUpgrade("Split Shot")) return upgradeManager.getUpgrade("Split Shot").getParam3Value();
+        if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT)) {
+            Upgrade u = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT);
+            if (u != null) return u.getParam3Value();
+        }
         return 5.0;
     }
     

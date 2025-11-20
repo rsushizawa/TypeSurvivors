@@ -12,6 +12,8 @@ public class InsectSprayUpgrade extends Upgrade {
             new Parameter("Height", 5.0, 2.0, "px"),
             new Parameter("Letters/sec", 1.0, 0.5, ""),
             new Parameter("Cooldown", 15.0, -1.0, "s"));
+        this.icon = "I";
+        this.setIconPath("Assets/Icons/Gasmask.png");
     }
 
     @Override
