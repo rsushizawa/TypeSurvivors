@@ -48,7 +48,6 @@ public class VespaEnemy extends Enemy {
         this.worldX += this.worldSpeedX;
         
         if (this.worldX > this.MAX_WIDTH) {
-            // Eased bounce back inside bounds
             double overshoot = this.worldX - this.MAX_WIDTH;
             this.worldSpeedX = -Math.abs(this.worldSpeedX);
             this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);

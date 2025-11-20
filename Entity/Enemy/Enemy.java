@@ -65,11 +65,7 @@ public class Enemy {
             animatedSprite.updateAnimation();
         }
     }
-
-    /** Optional per-frame hook for enemies to react to the game model (e.g. special attacks).
-     * Default implementation does nothing. Subclasses may override. */
     public void onModelUpdate(GameModel model) {
-        // no-op by default
     }
 
     public BufferedImage getCurrentSprite() {
@@ -93,7 +89,6 @@ public class Enemy {
     }
 
     public int getScaledWidth() {
-        // Normalize sprite sizes so that very large source sprites scale similarly
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
         if (spriteWidth <= 0) return 0;
         double scaleFactor = normalized / (double)spriteWidth;
@@ -101,7 +96,6 @@ public class Enemy {
     }
 
     public int getScaledHeight() {
-        // Keep height proportional to width normalization
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
         if (spriteWidth <= 0) return 0;
         double scaleFactor = normalized / (double)spriteWidth;

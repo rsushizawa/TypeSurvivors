@@ -83,6 +83,18 @@ public class GameController extends KeyAdapter implements ActionListener {
             return;
         }
 
+        // Activate Wall on Tab key (player-triggered)
+        if (keyCode == KeyEvent.VK_TAB) {
+            boolean activated = model.tryActivateWall();
+            if (activated) {
+                System.out.println("[DEBUG] Wall activated via Tab");
+            } else {
+                System.out.println("[DEBUG] Wall activation attempt failed (no upgrade, on cooldown, or already active)");
+            }
+            view.repaint();
+            return;
+        }
+
         if (keyCode == KeyEvent.VK_ENTER) {
             if (model.getGameState() == GameState.MAIN_MENU) {
                 model.startNewGame();
