@@ -1,16 +1,23 @@
 package Audio;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.JarURLConnection;
+import java.util.Enumeration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import Config.PathsConfig;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.IOException;
 
 public class AudioManager {
 
@@ -24,77 +31,157 @@ public class AudioManager {
     private static Clip wrongKeySfx;
 
     private static Clip loadClip(String path) {
+        // Try file system first
         try {
             File audioFile = new File(path);
-            if (!audioFile.exists()) {
-                System.err.println("Audio file not found: " + path);
-                return null;
+            if (audioFile.exists()) {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                return clip;
             }
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.err.println("Error loading audio from file: " + path + " -> " + e.getMessage());
+        }
+
+        // Try classpath resource
+        try (InputStream ris = AudioManager.class.getClassLoader().getResourceAsStream(path)) {
+            if (ris != null) {
+                try (BufferedInputStream bis = new BufferedInputStream(ris)) {
+                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(audioStream);
+                    return clip;
+                }
+            } else {
+                // resource not found
+                System.err.println("Audio resource not found: " + path);
+            }
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.err.println("Error loading audio from resource: " + path + " -> " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    // Helper to load clip from an InputStream (when iterating jar entries)
+    private static Clip loadClipFromStream(InputStream is, String name) {
+        if (is == null) return null;
+        try (BufferedInputStream bis = new BufferedInputStream(is)) {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
             return clip;
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-            System.err.println("Error loading audio: " + path);
-            e.printStackTrace();
+            System.err.println("Error loading audio stream: " + name + " -> " + e.getMessage());
             return null;
         }
     }
+    
     public static void init() {
-    mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
-    bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
-    projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
-    // Load all projectile sfx files from Assets/SFX/Projectile
-    File projDir = new File(PathsConfig.SFX_DIR + "/Projectile");
-    if (projDir.exists() && projDir.isDirectory()) {
-        File[] files = projDir.listFiles((d, name) -> name.toLowerCase().endsWith(".wav"));
-        if (files != null) {
-            for (File f : files) {
-                Clip c = loadClip(f.getPath());
-                if (c != null) projectileSfxList.add(c);
+        mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
+        bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
+        projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
+        // Load all projectile sfx files from Assets/SFX/Projectile
+        File projDir = new File(PathsConfig.SFX_DIR + "/Projectile");
+        if (projDir.exists() && projDir.isDirectory()) {
+            File[] files = projDir.listFiles((d, name) -> name.toLowerCase().endsWith(".wav"));
+            if (files != null) {
+                for (File f : files) {
+                    Clip c = loadClip(f.getPath());
+                    if (c != null) projectileSfxList.add(c);
+                }
+            }
+        } else {
+            // Try to load from classpath/jar resources
+            try {
+                URL dirUrl = AudioManager.class.getClassLoader().getResource("Assets/SFX/Projectile");
+                if (dirUrl != null) {
+                    if ("jar".equals(dirUrl.getProtocol())) {
+                        JarURLConnection jarConn = (JarURLConnection) dirUrl.openConnection();
+                        JarFile jf = jarConn.getJarFile();
+                        Enumeration<JarEntry> entries = jf.entries();
+                        while (entries.hasMoreElements()) {
+                            JarEntry entry = entries.nextElement();
+                            String name = entry.getName();
+                            if (name.startsWith("Assets/SFX/Projectile/") && name.toLowerCase().endsWith(".wav")) {
+                                try (InputStream is = AudioManager.class.getClassLoader().getResourceAsStream(name)) {
+                                    Clip c = loadClipFromStream(is, name);
+                                    if (c != null) projectileSfxList.add(c);
+                                }
+                            }
+                        }
+                    } else if ("file".equals(dirUrl.getProtocol())) {
+                        File d = new File(dirUrl.toURI());
+                        File[] files = d.listFiles((xx, name) -> name.toLowerCase().endsWith(".wav"));
+                        if (files != null) for (File f : files) {
+                            Clip c = loadClip(f.getPath());
+                            if (c != null) projectileSfxList.add(c);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error enumerating projectile SFX resources: " + e.getMessage());
             }
         }
-    }
-    fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
-    louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
-    wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
+        fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
+        louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
+        wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
     }
 
     public static void playMainMenuMusic() {
-        stopAllMusic();
-        if (mainMenuMusic != null) {
-            mainMenuMusic.setFramePosition(0); 
-            mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
-        }
+        new Thread(() -> {
+            stopAllMusicSync();
+            if (mainMenuMusic != null) {
+                mainMenuMusic.setFramePosition(0); 
+                mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            }
+        }).start();
     }
 
     public static void playGameMusic() {
-        if (bossMusic != null && bossMusic.isRunning()) {
-            bossMusic.stop();
-        }
-        if (mainMenuMusic != null && !mainMenuMusic.isRunning()) {
-            mainMenuMusic.setFramePosition(0);
-            mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
-        }
+        new Thread(() -> {
+            try {
+                if (bossMusic != null && bossMusic.isRunning()) {
+                    bossMusic.stop();
+                }
+                if (mainMenuMusic != null && !mainMenuMusic.isRunning()) {
+                    mainMenuMusic.setFramePosition(0);
+                    mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                }
+            } catch (Exception e) {
+                System.err.println("Error switching to game music: " + e.getMessage());
+            }
+        }).start();
     }
 
     public static void playBossMusic() {
-        stopAllMusic();
-        if (bossMusic != null) {
-            bossMusic.setFramePosition(0);
-            bossMusic.loop(Clip.LOOP_CONTINUOUSLY);
-        }
+        new Thread(() -> {
+            stopAllMusicSync();
+            if (bossMusic != null) {
+                bossMusic.setFramePosition(0);
+                bossMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            }
+        }).start();
     }
 
     public static void stopAllMusic() {
-        if (mainMenuMusic != null && mainMenuMusic.isRunning()) {
-            mainMenuMusic.stop();
-        }
-        if (bossMusic != null && bossMusic.isRunning()) {
-            bossMusic.stop();
-        }
+        new Thread(AudioManager::stopAllMusicSync).start();
     }
 
+    // Helper method to perform stopping synchronously (used inside the threads above)
+    private static void stopAllMusicSync() {
+        try {
+            if (mainMenuMusic != null && mainMenuMusic.isRunning()) {
+                mainMenuMusic.stop();
+            }
+            if (bossMusic != null && bossMusic.isRunning()) {
+                bossMusic.stop();
+            }
+        } catch (Exception e) {
+            System.err.println("Error stopping music: " + e.getMessage());
+        }
+    }
 
     public static void playProjectileSfx() {
         try {
@@ -117,16 +204,24 @@ public class AudioManager {
     }
 
     public static void playFireballSfx() {
-        if (fireballSfx != null) {
-            fireballSfx.setFramePosition(0);
-            fireballSfx.start();
+        try {
+            if (fireballSfx != null) {
+                fireballSfx.setFramePosition(0);
+                fireballSfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing fireball sfx: " + e.getMessage());
         }
     }
 
     public static void playLouvaAttackSfx() {
-        if (louvaAttackSfx != null) {
-            louvaAttackSfx.setFramePosition(0);
-            louvaAttackSfx.start();
+        try {
+            if (louvaAttackSfx != null) {
+                louvaAttackSfx.setFramePosition(0);
+                louvaAttackSfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing louva sfx: " + e.getMessage());
         }
     }
 

@@ -4,7 +4,7 @@ import javax.swing.SwingUtilities;
 import Controller.GameController;
 import Model.GameModel;
 import View.GameView;
-import Audio.AudioManager; // Added import
+import Audio.AudioManager;
 
 public class TypeSurvivors {
 
