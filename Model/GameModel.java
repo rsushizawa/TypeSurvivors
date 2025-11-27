@@ -1,7 +1,12 @@
 package Model;
+import TypeSurvivors.Model.CsvReader;
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
+
+import static TypeSurvivors.Model.CsvReader.readCsv;
 
 public class GameModel {
 
@@ -11,12 +16,16 @@ public class GameModel {
     private int baseWordSpeed = 1;
     private int baseSpawnChance = 80;
 
+    //private List<String[]> dict = readCsv("src/TypeSurvivors/Model/dict.csv");
+
     private final String[] WORD_LIST = {
         "java", "swing", "model", "view", "controller", "event",
         "pixel", "array", "string", "class", "object", "method", "logic"
     };
 
-    private final ArrayList<Word> words = new ArrayList<>();
+    //public final String[] WORD_LIST = dict;
+
+    private final ArrayList<Model.Word> words = new ArrayList<>();
     private final Random random = new Random();
     private String currentTypedWord = "";
     private int score = 0;
