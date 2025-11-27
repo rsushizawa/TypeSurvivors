@@ -83,15 +83,15 @@ public class GamePanel extends JPanel {
                 break;
             case LEVEL_UP_CHOICE:
                 drawGame(g2d);
-                levelUpRenderer.renderLevelUpScreen(g2d, model, getWidth(), getHeight()-300);
+                levelUpRenderer.renderLevelUpScreen(g2d, model, getWidth(), getHeight()-800);
                 break;
             case ENTERING_NAME:
                 drawGame(g2d);
-                menuRenderer.renderNameEntry(g2d, model, getWidth(), getHeight());
+                menuRenderer.renderNameEntry(g2d, model, getWidth(), getHeight()-300);
                 break;
             case GAME_OVER:
                 drawGame(g2d);
-                menuRenderer.renderGameOver(g2d, model, getWidth(), getHeight());
+                menuRenderer.renderGameOver(g2d, model, getWidth(), getHeight()-300);
                 break;
         }
     }
