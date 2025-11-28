@@ -11,7 +11,7 @@ public class AranhaEnemy extends Enemy {
     private static final int SPRITE_HEIGHT = 184;
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;
-    private static final int ANIMATION_SPEED = 8;
+    private static final int ANIMATION_SPEED = 4;
 
     private final double initialWorldX;
     private final double worldSpeedX;
@@ -45,24 +45,23 @@ public class AranhaEnemy extends Enemy {
 
     @Override
     public void update(){
-        // Modulate forward (z) speed with a sinusoidal curve for a wavering speed
         double phase = (this.z * this.worldSpeedX * 0.1 * Math.PI);
         double sin = Math.sin(phase);
-        // speedMultiplier ranges roughly from 0.5 to 1.5 (adjust for desired effect)
-        double speedMultiplier = 1.0 + 0.5 * sin;
+        double speedMultiplier = 1.0 + 1.0 * sin;
         this.z += this.zSpeed * speedMultiplier;
 
-        // Lateral movement follows a sine curve around the initial X position
-        // This keeps the enemy coming straight along the depth (z) while oscillating sideways
         double angle = phase; 
         this.worldX = this.initialWorldX + (Math.sin(angle) * SINE_AMPLITUDE);
         
-        if (this.worldX > this.MAX_WIDTH) {
-            double overshoot = this.worldX - this.MAX_WIDTH;
-            this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
-        } else if (this.worldX < this.MIN_WIDTH) {
-            double overshoot = this.MIN_WIDTH - this.worldX;
-            this.worldX = this.MIN_WIDTH + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        double[] bounds = Config.PerspectiveConfig.getWorldXBoundsForZ(this.z);
+        double minW = bounds[0];
+        double maxW = bounds[1];
+        if (this.worldX > maxW) {
+            double overshoot = this.worldX - maxW;
+            this.worldX = maxW - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        } else if (this.worldX < minW) {
+            double overshoot = minW - this.worldX;
+            this.worldX = minW + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
         }
 
         updatePerspective();

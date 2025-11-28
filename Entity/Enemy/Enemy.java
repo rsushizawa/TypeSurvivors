@@ -1,11 +1,16 @@
 package Entity.Enemy;
 
-import Animation.AnimatedSprite;
 import java.awt.image.BufferedImage;
 import Config.EnemyConfig;
+import Config.PerspectiveConfig;
 import Model.GameModel;
+import java.awt.Graphics2D;
+import java.awt.Font;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import GameObject.AnimatedGameObject;
 
-public class Enemy {
+public class Enemy extends AnimatedGameObject {
     public String text;
     public final String originalText;
     public int x, y; // Screen coordinates
@@ -19,39 +24,55 @@ public class Enemy {
     public int MAX_WIDTH = 540;
     public int MIN_WIDTH = 0;
 
-    protected AnimatedSprite animatedSprite;
-    protected int spriteWidth;
-    protected int spriteHeight;
     protected double scale;
 
-    public static final int HORIZON_Y = 50;
-    public static final int VANISHING_POINT_X = 300; 
-    public static final double MIN_SCALE = 0.1; 
-    public static final double MAX_SCALE = 1.5;
-    public static final int PLAYER_Y_LINE = 1000; 
+    public static int HORIZON_Y = (int)Math.round(PerspectiveConfig.HORIZON_Y);
+    public static int PLAYER_Y_LINE = (int)Math.round(PerspectiveConfig.PLAYER_Y_LINE);
+
+    public static void refreshPerspectiveConstants() {
+        HORIZON_Y = (int)Math.round(PerspectiveConfig.HORIZON_Y);
+        PLAYER_Y_LINE = (int)Math.round(PerspectiveConfig.PLAYER_Y_LINE);
+    }
 
     protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
+        super(0, 0, sprites, animationSpeed, true);
         this.text = text;
         this.originalText = text;
         this.worldX = worldX;
         this.z = 0.0;
         this.zSpeed = zSpeed;
-        
-        this.animatedSprite = new AnimatedSprite(sprites, animationSpeed, true);
-        
-        this.spriteWidth = getSpriteWidth();
-        this.spriteHeight = getSpriteHeight();
-        
         updatePerspective();
     }
 
 
     public void updatePerspective() {
-        this.scale = MIN_SCALE + this.z * (MAX_SCALE - MIN_SCALE);
-        
-        this.y = (int)(HORIZON_Y + this.z * (PLAYER_Y_LINE - HORIZON_Y));
-        
-        int projectedX = (int)(VANISHING_POINT_X + (this.worldX - VANISHING_POINT_X) * this.scale);
+        this.scale = PerspectiveConfig.MIN_SCALE + this.z * (PerspectiveConfig.MAX_SCALE - PerspectiveConfig.MIN_SCALE);
+
+        java.awt.geom.Point2D.Double pathPoint = PerspectiveConfig.ROAD_PATH.getPointForZ(this.z);
+        java.awt.geom.Point2D.Double normal = PerspectiveConfig.ROAD_PATH.getNormalForZ(this.z);
+        // Apply global camera vertical offset so the camera can be raised/lowered.
+        pathPoint.y += PerspectiveConfig.CAMERA_Y_OFFSET;
+        this.y = (int) Math.round(pathPoint.y);
+
+        double centerXAtZ = pathPoint.x;
+
+        // Lateral offset in screen pixels (positive = right side along normal)
+        double lateralScreen = (this.worldX - PerspectiveConfig.PLAYER_CENTER_X) * this.scale;
+
+        // Clamp worldX in world-space so movement respects the road edges.
+        double[] bounds = PerspectiveConfig.getWorldXBoundsForZ(this.z);
+        double minAllowedWorldX = bounds[0];
+        double maxAllowedWorldX = bounds[1];
+        if (this.worldX < minAllowedWorldX) this.worldX = minAllowedWorldX;
+        if (this.worldX > maxAllowedWorldX) this.worldX = maxAllowedWorldX;
+
+        // Recompute lateralScreen after potential clamp
+        lateralScreen = (this.worldX - PerspectiveConfig.PLAYER_CENTER_X) * this.scale;
+
+        // Project along the normal so the lateral offset follows the road slope.
+        int projectedX = (int) Math.round(centerXAtZ + normal.x * lateralScreen);
+        int projectedY = (int) Math.round(pathPoint.y + normal.y * lateralScreen);
+        this.y = projectedY;
         int halfScaledWidth = 0;
         int scaledW = getScaledWidth();
         if (scaledW > 0) halfScaledWidth = scaledW / 2;
@@ -72,31 +93,17 @@ public class Enemy {
     public void update(){
         this.z += this.zSpeed;
         updatePerspective();
+        super.update();
     }
+
 
 
     public void updateAnimation() {
-        if (animatedSprite != null) {
-            animatedSprite.updateAnimation();
+        if (this.animatedSprite != null) {
+            this.animatedSprite.updateAnimation();
         }
     }
     public void onModelUpdate(GameModel model) {
-    }
-
-    public BufferedImage getCurrentSprite() {
-        return animatedSprite != null ? animatedSprite.getCurrentSprite() : null;
-    }
-
-    public boolean hasSprites() {
-        return animatedSprite != null && animatedSprite.hasSprites();
-    }
-
-    public int getSpriteWidth() {
-        return animatedSprite != null ? animatedSprite.getSpriteWidth() : 0;
-    }
-
-    public int getSpriteHeight() {
-        return animatedSprite != null ? animatedSprite.getSpriteHeight() : 0;
     }
 
     public double getScale() {
@@ -105,15 +112,52 @@ public class Enemy {
 
     public int getScaledWidth() {
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
-        if (spriteWidth <= 0) return 0;
-        double scaleFactor = normalized / (double)spriteWidth;
-        return (int)(this.spriteWidth * this.scale * scaleFactor);
+        int sw = getSpriteWidth();
+        if (sw <= 0) return 0;
+        double scaleFactor = normalized / (double)sw;
+        return (int)(sw * this.scale * scaleFactor);
     }
 
     public int getScaledHeight() {
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
-        if (spriteWidth <= 0) return 0;
-        double scaleFactor = normalized / (double)spriteWidth;
-        return (int)(this.spriteHeight * this.scale * scaleFactor);
+        int sw = getSpriteWidth();
+        if (sw <= 0) return 0;
+        double scaleFactor = normalized / (double)sw;
+        return (int)(getSpriteHeight() * this.scale * scaleFactor);
+    }
+
+    public void render(Graphics2D g, GameModel model) {
+        BufferedImage sprite = getCurrentSprite();
+        if (sprite != null) {
+            int scaledWidth = getScaledWidth();
+            int scaledHeight = getScaledHeight();
+            int drawX = x - (scaledWidth / 2);
+            int drawY = y - scaledHeight;
+            g.drawImage(sprite, drawX, drawY, scaledWidth, scaledHeight, null);
+            int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
+            g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
+            FontMetrics fm = g.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int centeredX = x - (textWidth / 2);
+            int textY = y + 15;
+            if (model != null && model.getTargetEnemy() == this) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g.drawString(text, centeredX, textY);
+        } else {
+            g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.ENEMY_FONT_SIZE));
+            FontMetrics fm = g.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int centeredX = x - (textWidth / 2);
+            int textY = y;
+            if (model != null && model.getTargetEnemy() == this) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g.drawString(text, centeredX, textY);
+        }
     }
 }

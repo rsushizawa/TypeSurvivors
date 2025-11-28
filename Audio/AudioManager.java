@@ -29,9 +29,10 @@ public class AudioManager {
     private static Clip fireballSfx;
     private static Clip louvaAttackSfx;
     private static Clip wrongKeySfx;
+    private static float musicVolume = Config.GameConfig.MUSIC_VOLUME;
+    private static float sfxVolume = Config.GameConfig.SFX_VOLUME;
 
     private static Clip loadClip(String path) {
-        // Try file system first
         try {
             File audioFile = new File(path);
             if (audioFile.exists()) {
@@ -44,7 +45,6 @@ public class AudioManager {
             System.err.println("Error loading audio from file: " + path + " -> " + e.getMessage());
         }
 
-        // Try classpath resource
         try (InputStream ris = AudioManager.class.getClassLoader().getResourceAsStream(path)) {
             if (ris != null) {
                 try (BufferedInputStream bis = new BufferedInputStream(ris)) {
@@ -54,7 +54,6 @@ public class AudioManager {
                     return clip;
                 }
             } else {
-                // resource not found
                 System.err.println("Audio resource not found: " + path);
             }
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
@@ -63,8 +62,6 @@ public class AudioManager {
 
         return null;
     }
-
-    // Helper to load clip from an InputStream (when iterating jar entries)
     private static Clip loadClipFromStream(InputStream is, String name) {
         if (is == null) return null;
         try (BufferedInputStream bis = new BufferedInputStream(is)) {
@@ -82,7 +79,6 @@ public class AudioManager {
         mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
         bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
         projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
-        // Load all projectile sfx files from Assets/SFX/Projectile
         File projDir = new File(PathsConfig.SFX_DIR + "/Projectile");
         if (projDir.exists() && projDir.isDirectory()) {
             File[] files = projDir.listFiles((d, name) -> name.toLowerCase().endsWith(".wav"));
@@ -93,7 +89,6 @@ public class AudioManager {
                 }
             }
         } else {
-            // Try to load from classpath/jar resources
             try {
                 URL dirUrl = AudioManager.class.getClassLoader().getResource("Assets/SFX/Projectile");
                 if (dirUrl != null) {
@@ -127,13 +122,16 @@ public class AudioManager {
         fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
         louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
         wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
+        setMusicVolume(musicVolume);
+        setSfxVolume(sfxVolume);
     }
 
     public static void playMainMenuMusic() {
         new Thread(() -> {
             stopAllMusicSync();
             if (mainMenuMusic != null) {
-                mainMenuMusic.setFramePosition(0); 
+                applyVolume(mainMenuMusic, musicVolume);
+                mainMenuMusic.setFramePosition(0);
                 mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }).start();
@@ -159,6 +157,7 @@ public class AudioManager {
         new Thread(() -> {
             stopAllMusicSync();
             if (bossMusic != null) {
+                applyVolume(bossMusic, musicVolume);
                 bossMusic.setFramePosition(0);
                 bossMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
@@ -169,7 +168,6 @@ public class AudioManager {
         new Thread(AudioManager::stopAllMusicSync).start();
     }
 
-    // Helper method to perform stopping synchronously (used inside the threads above)
     private static void stopAllMusicSync() {
         try {
             if (mainMenuMusic != null && mainMenuMusic.isRunning()) {
@@ -188,17 +186,18 @@ public class AudioManager {
             if (!projectileSfxList.isEmpty()) {
                 Clip c = projectileSfxList.get(rand.nextInt(projectileSfxList.size()));
                 if (c != null) {
+                    applyVolume(c, sfxVolume);
                     c.setFramePosition(0);
                     c.start();
                     return;
                 }
             }
             if (projectileSfx != null) {
+                applyVolume(projectileSfx, sfxVolume);
                 projectileSfx.setFramePosition(0);
                 projectileSfx.start();
             }
         } catch (Exception e) {
-            // Swallow audio playback exceptions to avoid crashing the game loop
             System.err.println("Error playing projectile sfx: " + e.getMessage());
         }
     }
@@ -206,6 +205,7 @@ public class AudioManager {
     public static void playFireballSfx() {
         try {
             if (fireballSfx != null) {
+                applyVolume(fireballSfx, sfxVolume);
                 fireballSfx.setFramePosition(0);
                 fireballSfx.start();
             }
@@ -217,6 +217,7 @@ public class AudioManager {
     public static void playLouvaAttackSfx() {
         try {
             if (louvaAttackSfx != null) {
+                applyVolume(louvaAttackSfx, sfxVolume);
                 louvaAttackSfx.setFramePosition(0);
                 louvaAttackSfx.start();
             }
@@ -227,10 +228,56 @@ public class AudioManager {
 
     public static void playWrongKeySfx() {
         try {
+            applyVolume(wrongKeySfx, sfxVolume);
             wrongKeySfx.setFramePosition(0);
             wrongKeySfx.start();
         } catch (Exception e) {
             System.err.println("Error playing WrongKey SFX: " + e.getMessage());
+        }
+    }
+
+    public static void setMusicVolume(float volume) {
+        musicVolume = Math.max(0f, Math.min(1f, volume));
+        Config.GameConfig.MUSIC_VOLUME = musicVolume;
+        applyVolume(mainMenuMusic, musicVolume);
+        applyVolume(bossMusic, musicVolume);
+    }
+
+    public static float getMusicVolume() {
+        return musicVolume;
+    }
+
+    public static void setSfxVolume(float volume) {
+        sfxVolume = Math.max(0f, Math.min(1f, volume));
+        Config.GameConfig.SFX_VOLUME = sfxVolume;
+        applyVolume(projectileSfx, sfxVolume);
+        for (Clip c : projectileSfxList) applyVolume(c, sfxVolume);
+        applyVolume(fireballSfx, sfxVolume);
+        applyVolume(louvaAttackSfx, sfxVolume);
+        applyVolume(wrongKeySfx, sfxVolume);
+    }
+
+    public static float getSfxVolume() {
+        return sfxVolume;
+    }
+
+    private static void applyVolume(Clip clip, float volume) {
+        if (clip == null) return;
+        try {
+            if (clip.isControlSupported(javax.sound.sampled.FloatControl.Type.MASTER_GAIN)) {
+                javax.sound.sampled.FloatControl vol = (javax.sound.sampled.FloatControl) clip.getControl(javax.sound.sampled.FloatControl.Type.MASTER_GAIN);
+                float min = vol.getMinimum();
+                float max = vol.getMaximum();
+                float dB;
+                if (volume <= 0f) {
+                    dB = min;
+                } else {
+                    dB = (float) (20.0 * Math.log10(volume));
+                    dB = Math.max(min, Math.min(max, dB));
+                }
+                vol.setValue(dB);
+            }
+        } catch (Exception e) {
         }
     }
 }

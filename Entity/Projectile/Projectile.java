@@ -2,6 +2,9 @@ package Entity.Projectile;
 
 import GameObject.GameObject;
 import TypeSurvivors.TypeSurvivors;
+import java.awt.Graphics2D;
+import java.awt.Color;
+import Model.GameModel;
 
 public class Projectile extends GameObject {
     
@@ -47,5 +50,12 @@ public class Projectile extends GameObject {
 
     public boolean isEnemyOwned() {
         return enemyOwned;
+    }
+
+    @Override
+    public void render(Graphics2D g, GameModel model) {
+        int r = Config.GameConfig.PROJECTILE_RADIUS;
+        g.setColor(Color.ORANGE);
+        g.fillOval(x - r, y - r, r * 2, r * 2);
     }
 }

@@ -1,5 +1,7 @@
 package Config;
 
+import javax.swing.plaf.TreeUI;
+
 /**
  * Global game configuration constants.
  */
@@ -14,7 +16,7 @@ public final class GameConfig {
     // Enemy tuning
     public static final double ENEMY_SPEED_MULTIPLIER = 0.8; // global speed reduction
     // Reference sprite width for normalized scaling (so big sprites appear similar)
-    public static final int REFERENCE_SPRITE_WIDTH = 64;
+    public static final int REFERENCE_SPRITE_WIDTH = 128;
 
     // Spawn / margins
     public static final int SPAWN_HORIZONTAL_BORDER = 50; // px margin from left/right when spawning
@@ -68,4 +70,12 @@ public final class GameConfig {
     public static final int SMALL_FONT = 12;
     // Enemy text fixed font size for readability
     public static final int ENEMY_FONT_SIZE = 14;
+
+    // Runtime-configurable settings (persisted at runtime only)
+    // Range: 0.0 (mute) .. 1.0 (full)
+    public static float MUSIC_VOLUME = 0.8f;
+    public static float SFX_VOLUME = 0.8f;
+    public static boolean FULLSCREEN = false;
+    // Developer debugging visuals
+    public static boolean DEBUG_ROAD_RENDER = true;
 }

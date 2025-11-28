@@ -41,9 +41,6 @@ public class WaveManager {
         return waveSpeedPixels;
     }
 
-    /**
-     * Dynamic spawn chance computed by the difficulty manager. Lower return value means more frequent spawns.
-     */
     public int getWaveSpawnChance() {
         if (waveNumber <= 0) return difficultyManager.spawnChanceForWave(0);
         return difficultyManager.spawnChanceDuringWave(waveNumber, spawnedSoFar, totalEnemiesThisWave);

@@ -86,7 +86,6 @@ public class GameModel {
     
     }
 
-    // --- Health APIs used by upgrades ---
     public int getMaxLives() {
         return maxLives;
     }
@@ -94,7 +93,6 @@ public class GameModel {
     public void increaseMaxLives(int amount) {
         if (amount <= 0) return;
         maxLives += amount;
-        // Optionally heal the player to reflect new max
         if (lives < maxLives) lives = Math.min(maxLives, lives + amount);
     }
 
@@ -104,13 +102,13 @@ public class GameModel {
     }
 
     public void startHealthRegen(double hpPerSecond, double durationSeconds) {
-        // backward-compatible: no cooldown
+ 
         startHealthRegen(hpPerSecond, durationSeconds, 0.0);
     }
 
     public void startHealthRegen(double hpPerSecond, double durationSeconds, double cooldownSeconds) {
         if (hpPerSecond <= 0 || durationSeconds <= 0) return;
-        // enforce cooldown
+
         if (healthRegenCooldown > 0) return;
 
         regenEffects.add(new RegenEffect(hpPerSecond, durationSeconds));
@@ -123,7 +121,7 @@ public class GameModel {
     private static class RegenEffect {
         double ratePerSecond;
         double remainingSeconds;
-        double accumulator = 0.0; // fractional hp carried between ticks
+        double accumulator = 0.0; 
 
         RegenEffect(double ratePerSecond, double durationSeconds) {
             this.ratePerSecond = ratePerSecond;
@@ -379,7 +377,6 @@ public class GameModel {
         if (result == TypingResult.HIT) {
             gameStats.incrementCharsTyped(1);
             
-            // Split shot logic
             if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT) && splitShotCooldown <= 0) {
                 Upgrade splitShot = upgradeManager.getUpgrade(UpgradeManager.UpgradeId.SPLIT_SHOT);
                 int numProjectiles = (int) splitShot.getParam1Value();
@@ -456,7 +453,6 @@ public class GameModel {
         typingManager.handleBackspace();
     }
     
-    // --- GETTERS ---
     
     public int getScore() {
         return score;
@@ -466,7 +462,6 @@ public class GameModel {
         return lives;
     }
 
-    // Regen status helpers for HUD
     public double getActiveRegenRate() {
         double total = 0.0;
         for (RegenEffect r : regenEffects) total += r.ratePerSecond;
@@ -479,7 +474,6 @@ public class GameModel {
         return max;
     }
 
-    // Regen cooldown getters for HUD
     public double getHealthRegenCooldown() {
         return healthRegenCooldown;
     }
@@ -492,7 +486,6 @@ public class GameModel {
         return gameState;
     }
     
-    // Setter for game state
     public void setGameState(GameState state) {
         this.gameState = state;
     }
