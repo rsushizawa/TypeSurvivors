@@ -41,4 +41,9 @@ public class Player extends AnimatedGameObject {
     public static boolean spritesLoaded() {
         return idleSprites != null;
     }
+
+    @Override
+    public void render(java.awt.Graphics2D g, Model.GameModel model) {
+        super.render(g, model);
+    }
 }

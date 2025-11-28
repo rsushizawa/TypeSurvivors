@@ -55,6 +55,14 @@ public class GameView {
 		return fullscreen;
 	}
 
+	public void addGameKeyListener(KeyListener listener) {
+		gamePanel.addKeyListener(listener);
+	}
+
+	public int getMainMenuSelection() { return gamePanel.getMainMenuSelection(); }
+	public void setMainMenuSelection(int idx) { gamePanel.setMainMenuSelection(idx); }
+	public void activateMainMenuSelection() { gamePanel.activateMainMenuSelection(); }
+
 	public void setFullscreen(boolean fs) {
 		if (this.fullscreen == fs) return;
 		this.fullscreen = fs;
@@ -65,11 +73,9 @@ public class GameView {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice gd = ge.getDefaultScreenDevice();
 		if (fs) {
+			// Enter OS fullscreen but keep the game's logical resolution the same.
 			gd.setFullScreenWindow(frame);
-			DisplayMode dm = gd.getDisplayMode();
-			int newW = dm.getWidth();
-			int newH = dm.getHeight();
-			gamePanel.setTargetResolution(newW, newH);
+			gamePanel.setTargetResolution(gameWidth, gameHeight);
 		} else {
 			gd.setFullScreenWindow(null);
 			frame.setSize(gameWidth, gameHeight);
@@ -79,14 +85,6 @@ public class GameView {
 		frame.setVisible(true);
 		gamePanel.requestFocusInWindow();
 	}
-
-	public void addGameKeyListener(KeyListener listener) {
-		gamePanel.addKeyListener(listener);
-	}
-
-	public int getMainMenuSelection() { return gamePanel.getMainMenuSelection(); }
-	public void setMainMenuSelection(int idx) { gamePanel.setMainMenuSelection(idx); }
-	public void activateMainMenuSelection() { gamePanel.activateMainMenuSelection(); }
 
 	public int getOptionsSelection() { return gamePanel.getOptionsSelection(); }
 	public void setOptionsSelection(int idx) { gamePanel.setOptionsSelection(idx); }

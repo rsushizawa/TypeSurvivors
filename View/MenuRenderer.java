@@ -4,43 +4,11 @@ import java.awt.*;
 // keep imports minimal for this helper-only renderer
 
 import Model.GameModel;
-import Data.HighScoreEntry;
-import Config.GameConfig;
-
 // no collections required here
 
 public class MenuRenderer {
 
-    private void drawLeaderboard(Graphics2D g, GameModel model, int startY, int width) {
-        drawCenteredString(g, "=== HIGH SCORES ===", startY, Color.YELLOW, Font.BOLD, 24, width);
-
-        java.util.List<HighScoreEntry> scores = model.getLeaderboardManager().getHighScores();
-        if (scores.isEmpty()) {
-            drawCenteredString(g, "No scores yet!", startY + 40, Color.GRAY, Font.PLAIN, 18, width);
-            return;
-        }
-
-        g.setColor(Color.CYAN);
-        g.setFont(new Font("Monospaced", Font.BOLD, 14));
-        FontMetrics fm = g.getFontMetrics();
-
-        String header = String.format("%-3s %-10s %8s %5s %5s", "#", "NAME", "SCORE", "WAVE", "WPM");
-        g.drawString(header, (width - fm.stringWidth(header)) / 2, startY + 40);
-
-        g.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        fm = g.getFontMetrics();
-
-        for (int i = 0; i < scores.size(); i++) {
-            HighScoreEntry entry = scores.get(i);
-            if (i % 2 == 0) {
-                g.setColor(Color.WHITE);
-            } else {
-                g.setColor(new Color(200, 200, 200));
-            }
-            String line = String.format("%-3d %-10s %8d %5d %5d", i + 1, entry.getName(), entry.getScore(), entry.getWave(), entry.getMaxWPM());
-            g.drawString(line, (width - fm.stringWidth(line)) / 2, startY + 65 + (i * 25));
-        }
-    }
+    // leaderboard moved to MainMenuPanel
 
     public void renderNameEntry(Graphics2D g, GameModel model, int width, int height) {
         g.setColor(new Color(0, 0, 0, 230));

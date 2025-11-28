@@ -1,6 +1,7 @@
 package Entity.Enemy;
 
 import java.awt.image.BufferedImage;
+import java.awt.FontMetrics;
 
 public class EnemyProjectile extends Enemy {
     private int vx, vy;
@@ -41,5 +42,21 @@ public class EnemyProjectile extends Enemy {
 
     public void destroy() {
         this.expired = true;
+    }
+
+    @Override
+    public void render(java.awt.Graphics2D g, Model.GameModel model) {
+        // simple projectile rendering as small filled circle with letter
+        g.setColor(java.awt.Color.MAGENTA);
+        int r = 6;
+        g.fillOval(x - r, y - r, r*2, r*2);
+        g.setColor(java.awt.Color.WHITE);
+        g.setFont(new java.awt.Font("Monospaced", java.awt.Font.BOLD, 12));
+        FontMetrics fm = g.getFontMetrics();
+        String t = this.text != null ? this.text : "";
+        if (!t.isEmpty()) {
+            int tw = fm.stringWidth(t);
+            g.drawString(t, x - tw/2, y + 4);
+        }
     }
 }

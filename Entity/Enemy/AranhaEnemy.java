@@ -45,15 +45,11 @@ public class AranhaEnemy extends Enemy {
 
     @Override
     public void update(){
-        // Modulate forward (z) speed with a sinusoidal curve for a wavering speed
         double phase = (this.z * this.worldSpeedX * 0.1 * Math.PI);
         double sin = Math.sin(phase);
-        // speedMultiplier ranges roughly from 0.5 to 1.5 (adjust for desired effect)
         double speedMultiplier = 1.0 + 0.5 * sin;
         this.z += this.zSpeed * speedMultiplier;
 
-        // Lateral movement follows a sine curve around the initial X position
-        // This keeps the enemy coming straight along the depth (z) while oscillating sideways
         double angle = phase; 
         this.worldX = this.initialWorldX + (Math.sin(angle) * SINE_AMPLITUDE);
         

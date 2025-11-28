@@ -1,11 +1,15 @@
 package Entity.Enemy;
 
-import Animation.AnimatedSprite;
 import java.awt.image.BufferedImage;
 import Config.EnemyConfig;
 import Model.GameModel;
+import java.awt.Graphics2D;
+import java.awt.Font;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import GameObject.AnimatedGameObject;
 
-public class Enemy {
+public class Enemy extends AnimatedGameObject {
     public String text;
     public final String originalText;
     public int x, y; // Screen coordinates
@@ -19,9 +23,6 @@ public class Enemy {
     public int MAX_WIDTH = 540;
     public int MIN_WIDTH = 0;
 
-    protected AnimatedSprite animatedSprite;
-    protected int spriteWidth;
-    protected int spriteHeight;
     protected double scale;
 
     public static final int HORIZON_Y = 50;
@@ -31,17 +32,13 @@ public class Enemy {
     public static final int PLAYER_Y_LINE = 1000; 
 
     protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
+        // Call AnimatedGameObject constructor with temporary coordinates; perspective will set x/y
+        super(0, 0, sprites, animationSpeed, true);
         this.text = text;
         this.originalText = text;
         this.worldX = worldX;
         this.z = 0.0;
         this.zSpeed = zSpeed;
-        
-        this.animatedSprite = new AnimatedSprite(sprites, animationSpeed, true);
-        
-        this.spriteWidth = getSpriteWidth();
-        this.spriteHeight = getSpriteHeight();
-        
         updatePerspective();
     }
 
@@ -75,28 +72,11 @@ public class Enemy {
     }
 
 
+
     public void updateAnimation() {
-        if (animatedSprite != null) {
-            animatedSprite.updateAnimation();
-        }
     }
+
     public void onModelUpdate(GameModel model) {
-    }
-
-    public BufferedImage getCurrentSprite() {
-        return animatedSprite != null ? animatedSprite.getCurrentSprite() : null;
-    }
-
-    public boolean hasSprites() {
-        return animatedSprite != null && animatedSprite.hasSprites();
-    }
-
-    public int getSpriteWidth() {
-        return animatedSprite != null ? animatedSprite.getSpriteWidth() : 0;
-    }
-
-    public int getSpriteHeight() {
-        return animatedSprite != null ? animatedSprite.getSpriteHeight() : 0;
     }
 
     public double getScale() {
@@ -105,15 +85,53 @@ public class Enemy {
 
     public int getScaledWidth() {
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
-        if (spriteWidth <= 0) return 0;
-        double scaleFactor = normalized / (double)spriteWidth;
-        return (int)(this.spriteWidth * this.scale * scaleFactor);
+        int sw = getSpriteWidth();
+        if (sw <= 0) return 0;
+        double scaleFactor = normalized / (double)sw;
+        return (int)(sw * this.scale * scaleFactor);
     }
 
     public int getScaledHeight() {
     double normalized = (double)EnemyConfig.REFERENCE_SPRITE_WIDTH;
-        if (spriteWidth <= 0) return 0;
-        double scaleFactor = normalized / (double)spriteWidth;
-        return (int)(this.spriteHeight * this.scale * scaleFactor);
+        int sw = getSpriteWidth();
+        if (sw <= 0) return 0;
+        double scaleFactor = normalized / (double)sw;
+        return (int)(getSpriteHeight() * this.scale * scaleFactor);
+    }
+
+    public void render(Graphics2D g, GameModel model) {
+        BufferedImage sprite = getCurrentSprite();
+        if (sprite != null) {
+            int scaledWidth = getScaledWidth();
+            int scaledHeight = getScaledHeight();
+            int drawX = x - (scaledWidth / 2);
+            int drawY = y - scaledHeight;
+            g.drawImage(sprite, drawX, drawY, scaledWidth, scaledHeight, null);
+            int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
+            g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
+            FontMetrics fm = g.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int centeredX = x - (textWidth / 2);
+            int textY = y + 15;
+            if (model != null && model.getTargetEnemy() == this) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g.drawString(text, centeredX, textY);
+        } else {
+            // fallback: draw text only
+            g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.ENEMY_FONT_SIZE));
+            FontMetrics fm = g.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int centeredX = x - (textWidth / 2);
+            int textY = y;
+            if (model != null && model.getTargetEnemy() == this) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g.drawString(text, centeredX, textY);
+        }
     }
 }

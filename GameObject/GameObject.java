@@ -30,4 +30,7 @@ public abstract class GameObject {
     public void deactivate() {
         active = false;
     }
+
+    // Render the object. Implementations may use the model for context.
+    public abstract void render(java.awt.Graphics2D g, Model.GameModel model);
 }

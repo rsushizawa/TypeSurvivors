@@ -49,7 +49,6 @@ public class GamePanel extends JPanel {
             }
         });
 
-        // Mouse handling for main menu selection & clicks
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -89,7 +88,6 @@ public class GamePanel extends JPanel {
             }
         });
 
-        // Options UI mouse handling (map panel coords to game coords)
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -117,7 +115,6 @@ public class GamePanel extends JPanel {
                     boolean newFs = !Config.GameConfig.FULLSCREEN;
                     parent.setFullscreen(newFs);
                 } else if (idx >= 0) {
-                    // click on option label area
                     optionsPanel.setSelected(idx);
                     if (idx == 0) { // music
                         draggingMusic = true;
@@ -158,7 +155,6 @@ public class GamePanel extends JPanel {
             }
         });
 
-        // mouse move in options: highlight hovered entry
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -197,7 +193,6 @@ public class GamePanel extends JPanel {
         return null;
     }
 
-    // Map a point in panel coordinates to the game's base resolution coordinates
     private Point panelToGame(Point p) {
         int panelW = getWidth();
         int panelH = getHeight();
@@ -228,7 +223,6 @@ public class GamePanel extends JPanel {
         Audio.AudioManager.setSfxVolume(vol);
     }
 
-    // Activate main menu entry at index (or currently selected if -1)
     public void activateMainMenuSelection(int idx) {
         int selected = idx >= 0 ? idx : mainMenuPanel.getSelected();
         switch (selected) {
@@ -280,9 +274,6 @@ public class GamePanel extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-        // Render everything into an offscreen buffer at the game's base resolution,
-        // then scale that buffer to the panel while preserving aspect ratio and
-        // painting black bars for remaining space.
         int panelW = getWidth();
         int panelH = getHeight();
         int gw = targetWidth;
@@ -301,7 +292,6 @@ public class GamePanel extends JPanel {
             gb.fillRect(0, 0, gw, gh);
         }
 
-        // Updated switch to handle new states (render into gb using game resolution gw/gh)
         switch (model.getGameState()) {
             case MAIN_MENU:
                 mainMenuPanel.render(gb, model, gw, gh);
@@ -328,8 +318,6 @@ public class GamePanel extends JPanel {
                 menuRenderer.renderGameOver(gb, model, gw, gh-300);
                 break;
             case OPTIONS:
-                // draw whatever is behind (game or menu) depending on context - here we'll darken and draw options
-                // If previous state was playing we might still want to draw the game behind; keep it simple: fill translucent background
                 gb.setColor(new Color(0,0,0,200));
                 gb.fillRect(0,0,gw,gh);
                 optionsPanel.render(gb, model, gw, gh);
@@ -363,8 +351,6 @@ public class GamePanel extends JPanel {
     }
 
     private void drawGame(Graphics2D g, int gw, int gh) {
-        Enemy target = model.getTargetEnemy();
-
         // Draw poison walls
         for (PoisonWall pw : model.getPoisonWalls()) {
             int w = (int) pw.width;
@@ -377,10 +363,8 @@ public class GamePanel extends JPanel {
             g.drawRect(left, top, w, h);
         }
 
-        g.setColor(Color.ORANGE);
         for (Projectile p : model.getProjectiles()) {
-            int r = Config.GameConfig.PROJECTILE_RADIUS;
-            g.fillOval(p.x - r, p.y - r, r * 2, r * 2);
+            p.render(g, model);
         }
 
         // Draw fireball effects
@@ -392,48 +376,15 @@ public class GamePanel extends JPanel {
         enemies.sort((e1, e2) -> Double.compare(e1.z, e2.z));
 
         for (Enemy enemy : enemies) {
-            if (enemy.hasSprites()) {
-                BufferedImage sprite = enemy.getCurrentSprite();
-                if (sprite != null) {
-                    int scaledWidth = enemy.getScaledWidth();
-                    int scaledHeight = enemy.getScaledHeight();
-                    int drawX = enemy.x - (scaledWidth / 2);
-                    int drawY = enemy.y - scaledHeight;
-                    g.drawImage(sprite, drawX, drawY, scaledWidth, scaledHeight, null);
-                    int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
-                    g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
-                    FontMetrics fm = g.getFontMetrics();
-                    int textWidth = fm.stringWidth(enemy.text);
-                    int centeredX = enemy.x - (textWidth / 2);
-                    int textY = enemy.y + 15;
-                    if (enemy == target) {
-                        g.setColor(Color.RED);
-                    } else {
-                        g.setColor(Color.WHITE);
-                    }
-                    g.drawString(enemy.text, centeredX, textY);
-                }
-            } else {
-                int fontSize = Config.GameConfig.ENEMY_FONT_SIZE;
-                g.setFont(new Font("Monospaced", Font.BOLD, fontSize));
-                FontMetrics fm = g.getFontMetrics();
-                int textWidth = fm.stringWidth(enemy.text);
-                int centeredX = enemy.x - (textWidth / 2);
-                int textY = enemy.y;
-                if (enemy == target) {
-                    g.setColor(Color.RED);
-                } else {
-                    g.setColor(Color.WHITE);
-                }
-                g.drawString(enemy.text, centeredX, textY);
-            }
+            enemy.render(g, model);
         }
 
-        // Draw player (apply wrong-char shake offset)
         Player player = model.getPlayer();
         int shakeX = model.getShakeOffsetX();
-        if (player != null && player.hasSprites()) {
-            g.drawImage(player.getCurrentSprite(), player.x + shakeX, player.y, null);
+        if (player != null) {
+            g.translate(shakeX, 0);
+            player.render(g, model);
+            g.translate(-shakeX, 0);
         }
 
         // Draw danger line
@@ -451,7 +402,6 @@ public class GamePanel extends JPanel {
 
         g.setStroke(new BasicStroke(1));
 
-        // HUD (typing, stats, cooldowns, XP bar)
         hudRenderer.render(g, model, cooldownIconBounds, cooldownIconTooltips, gw, gh);
     }
 
