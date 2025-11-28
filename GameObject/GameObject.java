@@ -30,4 +30,6 @@ public abstract class GameObject {
     public void deactivate() {
         active = false;
     }
+
+    public abstract void render(java.awt.Graphics2D g, Model.GameModel model);
 }

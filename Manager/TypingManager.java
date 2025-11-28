@@ -38,10 +38,8 @@ public class TypingManager {
     }
 
     private TypingResult damageEnemy() {
-        // Remove the first character (correct letter typed)
         targetEnemy.text = targetEnemy.text.substring(1);
-
-        // Push the enemy slightly away from the player so it is delayed
+    
         try {
             targetEnemy.z = Math.max(0.0, targetEnemy.z - Config.EnemyConfig.ENEMY_HIT_PUSHBACK);
         } catch (Exception ignored) {}
@@ -82,7 +80,6 @@ public class TypingManager {
                 }
                 return result;
             } else {
-                // On a miss, keep the same target (do not reset to another target).
                 return TypingResult.MISS;
             }
         }

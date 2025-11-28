@@ -50,4 +50,12 @@ public abstract class AnimatedGameObject extends GameObject {
     public int getSpriteHeight() {
         return animatedSprite != null ? animatedSprite.getSpriteHeight() : 0;
     }
+
+    @Override
+    public void render(java.awt.Graphics2D g, Model.GameModel model) {
+        BufferedImage sprite = getCurrentSprite();
+        if (sprite != null) {
+            g.drawImage(sprite, x, y, null);
+        }
+    }
 }

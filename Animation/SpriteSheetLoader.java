@@ -5,21 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-/**
- * Utility class for loading sprites from sprite sheets
- * Supports loading individual rows or entire sheets
- */
 public class SpriteSheetLoader {
     
-    /**
-     * Load a single row of sprites from a sprite sheet
-     * @param filepath Path to the sprite sheet image
-     * @param row Which row to extract (0-indexed)
-     * @param cols Number of columns (sprites) in the row
-     * @param spriteWidth Width of each sprite in pixels
-     * @param spriteHeight Height of each sprite in pixels
-     * @return Array of sprites, or null if loading fails
-     */
     public static BufferedImage[] loadSpriteRow(String filepath, int row, int cols, int spriteWidth, int spriteHeight) {
         try {
             BufferedImage spriteSheet = ImageIO.read(new File(filepath));
@@ -42,15 +29,6 @@ public class SpriteSheetLoader {
         }
     }
     
-    /**
-     * Load an entire sprite sheet into a single array
-     * @param filepath Path to the sprite sheet image
-     * @param rows Number of rows in the sheet
-     * @param cols Number of columns in the sheet
-     * @param spriteWidth Width of each sprite in pixels
-     * @param spriteHeight Height of each sprite in pixels
-     * @return Array of all sprites (row-major order), or null if loading fails
-     */
     public static BufferedImage[] loadFullSpriteSheet(String filepath, int rows, int cols, int spriteWidth, int spriteHeight) {
         try {
             BufferedImage spriteSheet = ImageIO.read(new File(filepath));

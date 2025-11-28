@@ -3,9 +3,6 @@ package GameObject;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
-/**
- * Simple visual effect for a Fire Ball AOE.
- */
 public class FireBallEffect {
     public final int x;
     public final int y;

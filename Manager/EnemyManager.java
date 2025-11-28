@@ -127,19 +127,16 @@ public class EnemyManager {
             double worldSpeedX = (random.nextDouble() * 4.0 + 2.0) * (random.nextBoolean() ? 1 : -1);
 
             Enemy newEnemy;
-            int enemyType = random.nextInt(4);
+            int enemyType = random.nextInt(3);
 
             switch (enemyType) {
                 case 0: 
-                    newEnemy = new OrcEnemy(text, worldX, zSpeed, 0);
-                    break;
-                case 1: 
                     newEnemy = new AranhaEnemy(text, worldX, zSpeed, pixelSpeed * 2.0);
                     break;
-                case 2:
+                case 1:
                     newEnemy = new LouvaDeusEnemy(text, worldX, zSpeed, worldSpeedX);
                     break;
-                case 3:
+                case 2:
                     newEnemy = new VespaEnemy(text, worldX, zSpeed, worldSpeedX); 
                     break;
                 default:

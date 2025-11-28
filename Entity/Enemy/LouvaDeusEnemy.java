@@ -6,7 +6,7 @@ import java.util.Random;
 import Model.GameModel;
 
 public class LouvaDeusEnemy extends Enemy {
-    private static final String SPRITE_PATH = "Assets/Enemy/mantis sprite sheet.png";
+    private static final String SPRITE_PATH = "Assets/Enemy/mantis atualizado.png";
     private static final int SPRITE_WIDTH = 184;
     private static final int SPRITE_HEIGHT = 184;
     private static final int ANIMATION_FRAMES = 6;
