@@ -8,10 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A temporary poison wall placed at a location. It slows enemies that pass
- * through it and removes letters from their words over time.
- */
 public class PoisonWall {
 
     public final int x; // center x position

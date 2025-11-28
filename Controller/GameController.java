@@ -88,7 +88,7 @@ public class GameController extends KeyAdapter implements ActionListener {
             return;
         }
 
-        // Menu selection with arrows when in main menu
+        // Menu selection with arrows when in main menu (use MainMenuPanel via view)
         if (model.getGameState() == GameState.MAIN_MENU) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getMainMenuSelection();
@@ -106,7 +106,7 @@ public class GameController extends KeyAdapter implements ActionListener {
             }
         }
 
-        // Options menu keyboard navigation
+        // Options menu keyboard navigation (via OptionsPanel through view)
         if (model.getGameState() == GameState.OPTIONS) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getOptionsSelection();
@@ -150,7 +150,7 @@ public class GameController extends KeyAdapter implements ActionListener {
             }
         }
 
-        // Pause menu keyboard navigation
+        // Pause menu keyboard navigation (via PausePanel through view)
         if (model.getGameState() == GameState.PAUSED) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getPauseSelection();

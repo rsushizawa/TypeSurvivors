@@ -31,10 +31,14 @@ public class GamePanel extends JPanel {
     private final OptionsPanel optionsPanel = new OptionsPanel();
     private final PausePanel pausePanel = new PausePanel();
     private final LevelUpRenderer levelUpRenderer = new LevelUpRenderer();
+    private int targetWidth;
+    private int targetHeight;
 
     public GamePanel(GameView parent, GameModel model) {
         this.parent = parent;
         this.model = model;
+        this.targetWidth = parent.getGameWidth();
+        this.targetHeight = parent.getGameHeight();
         setToolTipText("");
 
         setFocusTraversalKeysEnabled(false);
@@ -171,6 +175,13 @@ public class GamePanel extends JPanel {
         });
     }
 
+    public void setTargetResolution(int w, int h) {
+        this.targetWidth = Math.max(1, w);
+        this.targetHeight = Math.max(1, h);
+        revalidate();
+        repaint();
+    }
+
     private boolean draggingMusic = false;
     private boolean draggingSfx = false;
 
@@ -190,8 +201,8 @@ public class GamePanel extends JPanel {
     private Point panelToGame(Point p) {
         int panelW = getWidth();
         int panelH = getHeight();
-        int gw = parent.getGameWidth();
-        int gh = parent.getGameHeight();
+        int gw = targetWidth;
+        int gh = targetHeight;
         double scale = Math.min(panelW / (double) gw, panelH / (double) gh);
         int drawW = (int) Math.round(gw * scale);
         int drawH = (int) Math.round(gh * scale);
@@ -274,8 +285,8 @@ public class GamePanel extends JPanel {
         // painting black bars for remaining space.
         int panelW = getWidth();
         int panelH = getHeight();
-        int gw = parent.getGameWidth();
-        int gh = parent.getGameHeight();
+        int gw = targetWidth;
+        int gh = targetHeight;
 
         BufferedImage buffer = new BufferedImage(gw, gh, BufferedImage.TYPE_INT_ARGB);
         Graphics2D gb = buffer.createGraphics();

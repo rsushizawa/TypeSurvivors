@@ -62,16 +62,19 @@ public class GameView {
 
 		frame.dispose();
 		frame.setUndecorated(fs);
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice gd = ge.getDefaultScreenDevice();
 		if (fs) {
-			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			GraphicsDevice gd = ge.getDefaultScreenDevice();
 			gd.setFullScreenWindow(frame);
+			DisplayMode dm = gd.getDisplayMode();
+			int newW = dm.getWidth();
+			int newH = dm.getHeight();
+			gamePanel.setTargetResolution(newW, newH);
 		} else {
-			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			GraphicsDevice gd = ge.getDefaultScreenDevice();
 			gd.setFullScreenWindow(null);
 			frame.setSize(gameWidth, gameHeight);
 			frame.setLocationRelativeTo(null);
+			gamePanel.setTargetResolution(gameWidth, gameHeight);
 		}
 		frame.setVisible(true);
 		gamePanel.requestFocusInWindow();
