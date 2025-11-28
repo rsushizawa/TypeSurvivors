@@ -29,6 +29,8 @@ public class AudioManager {
     private static Clip fireballSfx;
     private static Clip louvaAttackSfx;
     private static Clip wrongKeySfx;
+    private static float musicVolume = Config.GameConfig.MUSIC_VOLUME;
+    private static float sfxVolume = Config.GameConfig.SFX_VOLUME;
 
     private static Clip loadClip(String path) {
         // Try file system first
@@ -127,13 +129,17 @@ public class AudioManager {
         fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
         louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
         wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
+        // apply configured volumes
+        setMusicVolume(musicVolume);
+        setSfxVolume(sfxVolume);
     }
 
     public static void playMainMenuMusic() {
         new Thread(() -> {
             stopAllMusicSync();
             if (mainMenuMusic != null) {
-                mainMenuMusic.setFramePosition(0); 
+                applyVolume(mainMenuMusic, musicVolume);
+                mainMenuMusic.setFramePosition(0);
                 mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }).start();
@@ -159,6 +165,7 @@ public class AudioManager {
         new Thread(() -> {
             stopAllMusicSync();
             if (bossMusic != null) {
+                applyVolume(bossMusic, musicVolume);
                 bossMusic.setFramePosition(0);
                 bossMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
@@ -188,12 +195,14 @@ public class AudioManager {
             if (!projectileSfxList.isEmpty()) {
                 Clip c = projectileSfxList.get(rand.nextInt(projectileSfxList.size()));
                 if (c != null) {
+                    applyVolume(c, sfxVolume);
                     c.setFramePosition(0);
                     c.start();
                     return;
                 }
             }
             if (projectileSfx != null) {
+                applyVolume(projectileSfx, sfxVolume);
                 projectileSfx.setFramePosition(0);
                 projectileSfx.start();
             }
@@ -206,6 +215,7 @@ public class AudioManager {
     public static void playFireballSfx() {
         try {
             if (fireballSfx != null) {
+                applyVolume(fireballSfx, sfxVolume);
                 fireballSfx.setFramePosition(0);
                 fireballSfx.start();
             }
@@ -217,6 +227,7 @@ public class AudioManager {
     public static void playLouvaAttackSfx() {
         try {
             if (louvaAttackSfx != null) {
+                applyVolume(louvaAttackSfx, sfxVolume);
                 louvaAttackSfx.setFramePosition(0);
                 louvaAttackSfx.start();
             }
@@ -227,10 +238,60 @@ public class AudioManager {
 
     public static void playWrongKeySfx() {
         try {
+            applyVolume(wrongKeySfx, sfxVolume);
             wrongKeySfx.setFramePosition(0);
             wrongKeySfx.start();
         } catch (Exception e) {
             System.err.println("Error playing WrongKey SFX: " + e.getMessage());
+        }
+    }
+
+    // Volume helpers
+    public static void setMusicVolume(float volume) {
+        musicVolume = Math.max(0f, Math.min(1f, volume));
+        Config.GameConfig.MUSIC_VOLUME = musicVolume;
+        applyVolume(mainMenuMusic, musicVolume);
+        applyVolume(bossMusic, musicVolume);
+    }
+
+    public static float getMusicVolume() {
+        return musicVolume;
+    }
+
+    public static void setSfxVolume(float volume) {
+        sfxVolume = Math.max(0f, Math.min(1f, volume));
+        Config.GameConfig.SFX_VOLUME = sfxVolume;
+        // apply to loaded SFX
+        applyVolume(projectileSfx, sfxVolume);
+        for (Clip c : projectileSfxList) applyVolume(c, sfxVolume);
+        applyVolume(fireballSfx, sfxVolume);
+        applyVolume(louvaAttackSfx, sfxVolume);
+        applyVolume(wrongKeySfx, sfxVolume);
+    }
+
+    public static float getSfxVolume() {
+        return sfxVolume;
+    }
+
+    private static void applyVolume(Clip clip, float volume) {
+        if (clip == null) return;
+        try {
+            if (clip.isControlSupported(javax.sound.sampled.FloatControl.Type.MASTER_GAIN)) {
+                javax.sound.sampled.FloatControl vol = (javax.sound.sampled.FloatControl) clip.getControl(javax.sound.sampled.FloatControl.Type.MASTER_GAIN);
+                float min = vol.getMinimum();
+                float max = vol.getMaximum();
+                // convert linear 0..1 to decibels
+                float dB;
+                if (volume <= 0f) {
+                    dB = min;
+                } else {
+                    dB = (float) (20.0 * Math.log10(volume));
+                    dB = Math.max(min, Math.min(max, dB));
+                }
+                vol.setValue(dB);
+            }
+        } catch (Exception e) {
+            // ignore controls not supported
         }
     }
 }

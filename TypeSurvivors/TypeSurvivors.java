@@ -5,6 +5,7 @@ import Controller.GameController;
 import Model.GameModel;
 import View.GameView;
 import Audio.AudioManager;
+import Config.GameConfig;
 
 public class TypeSurvivors {
 
@@ -19,6 +20,10 @@ public class TypeSurvivors {
             GameModel model = new GameModel(gameWidth, gameHeight);
 
             GameView view = new GameView(model, gameWidth, gameHeight);
+
+            if (GameConfig.FULLSCREEN) {
+                view.setFullscreen(true);
+            }
 
             GameController controller = new GameController(model, view);
 

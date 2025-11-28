@@ -68,4 +68,10 @@ public final class GameConfig {
     public static final int SMALL_FONT = 12;
     // Enemy text fixed font size for readability
     public static final int ENEMY_FONT_SIZE = 14;
+
+    // Runtime-configurable settings (persisted at runtime only)
+    // Range: 0.0 (mute) .. 1.0 (full)
+    public static float MUSIC_VOLUME = 0.8f;
+    public static float SFX_VOLUME = 0.8f;
+    public static boolean FULLSCREEN = false;
 }
