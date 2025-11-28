@@ -1,14 +1,11 @@
 package View;
 
 import java.awt.*;
-// keep imports minimal for this helper-only renderer
 
 import Model.GameModel;
-// no collections required here
 
 public class MenuRenderer {
 
-    // leaderboard moved to MainMenuPanel
 
     public void renderNameEntry(Graphics2D g, GameModel model, int width, int height) {
         g.setColor(new Color(0, 0, 0, 230));

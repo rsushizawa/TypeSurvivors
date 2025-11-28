@@ -14,7 +14,7 @@ public final class GameConfig {
     // Enemy tuning
     public static final double ENEMY_SPEED_MULTIPLIER = 0.8; // global speed reduction
     // Reference sprite width for normalized scaling (so big sprites appear similar)
-    public static final int REFERENCE_SPRITE_WIDTH = 64;
+    public static final int REFERENCE_SPRITE_WIDTH = 128;
 
     // Spawn / margins
     public static final int SPAWN_HORIZONTAL_BORDER = 50; // px margin from left/right when spawning

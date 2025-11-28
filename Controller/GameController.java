@@ -7,10 +7,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import Model.GameModel;
+import java.awt.Image;
 import Data.Upgrades.Upgrade;
 import View.GameView;
-import Entity.Enemy.EnemyProjectile;
-import Config.EnemyConfig;
+import View.BackgroundManager;
 import Data.GameState;
 
 public class GameController extends KeyAdapter implements ActionListener {
@@ -25,6 +25,9 @@ public class GameController extends KeyAdapter implements ActionListener {
         this.view = view;
 
         this.view.addGameKeyListener(this);
+        BackgroundManager.init(view);
+        this.view.setBackgroundImage(BackgroundManager.getBackgroundForState(model.getGameState()));
+        this.previousState = model.getGameState();
 
         this.gameLoop = new Timer(GameModel.GAME_SPEED_MS, this);
     }
@@ -39,7 +42,6 @@ public class GameController extends KeyAdapter implements ActionListener {
         
         if (model.getGameState() == GameState.LEVEL_UP_CHOICE) {
             if (keyCode == KeyEvent.VK_1 || keyCode == KeyEvent.VK_NUMPAD1) {
-                // apply the chosen upgrade immediately so utility upgrades take effect now
                 Upgrade choice0 = null;
                 if (!model.getUpgradeManager().getCurrentLevelUpOffer().isEmpty()) {
                     choice0 = model.getUpgradeManager().getCurrentLevelUpOffer().get(0);
@@ -47,7 +49,6 @@ public class GameController extends KeyAdapter implements ActionListener {
                 model.getUpgradeManager().selectUpgrade(0);
                 if (choice0 != null) choice0.apply(model, null);
                 model.setGameState(GameState.PLAYING);
-                // Resume game loop after selecting an upgrade
                 if (!gameLoop.isRunning()) {
                     gameLoop.start();
                 }
@@ -78,7 +79,6 @@ public class GameController extends KeyAdapter implements ActionListener {
             return;
         }
         
-        // Open options from main menu or pause
         if (keyCode == KeyEvent.VK_O) {
             if (model.getGameState() == GameState.MAIN_MENU || model.getGameState() == GameState.PAUSED) {
                 previousState = model.getGameState();
@@ -88,7 +88,6 @@ public class GameController extends KeyAdapter implements ActionListener {
             return;
         }
 
-        // Menu selection with arrows when in main menu (use MainMenuPanel via view)
         if (model.getGameState() == GameState.MAIN_MENU) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getMainMenuSelection();
@@ -106,7 +105,21 @@ public class GameController extends KeyAdapter implements ActionListener {
             }
         }
 
-        // Options menu keyboard navigation (via OptionsPanel through view)
+        if (keyCode == KeyEvent.VK_ESCAPE) {
+            if (model.getGameState() == GameState.OPTIONS) {
+                model.setGameState(previousState == null ? GameState.MAIN_MENU : previousState);
+                previousState = null;
+                view.repaint();
+                return;
+            }
+            if (model.getGameState() == GameState.PLAYING || 
+                model.getGameState() == GameState.PAUSED) {
+                model.togglePause();
+                view.repaint();
+            }
+            return;
+        }
+
         if (model.getGameState() == GameState.OPTIONS) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getOptionsSelection();
@@ -150,7 +163,6 @@ public class GameController extends KeyAdapter implements ActionListener {
             }
         }
 
-        // Pause menu keyboard navigation (via PausePanel through view)
         if (model.getGameState() == GameState.PAUSED) {
             if (keyCode == KeyEvent.VK_UP) {
                 int cur = view.getPauseSelection();
@@ -163,14 +175,13 @@ public class GameController extends KeyAdapter implements ActionListener {
                 view.repaint();
                 return;
             } else if (keyCode == KeyEvent.VK_ENTER) {
-                // activate pause selection
                 int cur = view.getPauseSelection();
-                if (cur == 0) { // Resume
+                if (cur == 0) { 
                     model.togglePause();
-                } else if (cur == 1) { // Options
+                } else if (cur == 1) {
                     previousState = GameState.PAUSED;
                     model.setGameState(GameState.OPTIONS);
-                } else if (cur == 2) { // Main Menu
+                } else if (cur == 2) {
                     model.returnToMenu();
                 }
                 view.repaint();
@@ -178,21 +189,6 @@ public class GameController extends KeyAdapter implements ActionListener {
             }
         }
         
-        if (keyCode == KeyEvent.VK_ESCAPE) {
-            if (model.getGameState() == GameState.OPTIONS) {
-                // close options and return to previous
-                model.setGameState(previousState == null ? GameState.MAIN_MENU : previousState);
-                previousState = null;
-                view.repaint();
-                return;
-            }
-            if (model.getGameState() == GameState.PLAYING || 
-                model.getGameState() == GameState.PAUSED) {
-                model.togglePause();
-                view.repaint();
-            }
-            return;
-        }
 
         if (keyCode == KeyEvent.VK_TAB) {
             model.tryActivateWall();
@@ -220,7 +216,6 @@ public class GameController extends KeyAdapter implements ActionListener {
         char c = e.getKeyChar();
 
         if (model.getGameState() == GameState.OPTIONS) {
-            // M/N adjust music up/down, K/J adjust sfx up/down, F toggle fullscreen
             int kc = Character.toUpperCase(c);
             try {
                 if (kc == 'M') {
@@ -246,7 +241,6 @@ public class GameController extends KeyAdapter implements ActionListener {
                     return;
                 }
             } catch (Exception ex) {
-                // ignore
             }
         }
 
@@ -270,6 +264,12 @@ public class GameController extends KeyAdapter implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         GameState currentState = model.getGameState();
+
+        if (currentState != previousState) {
+            Image bg = BackgroundManager.getBackgroundForState(currentState);
+            view.setBackgroundImage(bg);
+            previousState = currentState;
+        }
         
         if (currentState == GameState.PLAYING) {
             model.updateGameState();

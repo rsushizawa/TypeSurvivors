@@ -11,7 +11,7 @@ public class AranhaEnemy extends Enemy {
     private static final int SPRITE_HEIGHT = 184;
     private static final int WALK_DOWN_ROW = 0;
     private static final int ANIMATION_FRAMES = 4;
-    private static final int ANIMATION_SPEED = 8;
+    private static final int ANIMATION_SPEED = 4;
 
     private final double initialWorldX;
     private final double worldSpeedX;

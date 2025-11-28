@@ -33,7 +33,6 @@ public class AudioManager {
     private static float sfxVolume = Config.GameConfig.SFX_VOLUME;
 
     private static Clip loadClip(String path) {
-        // Try file system first
         try {
             File audioFile = new File(path);
             if (audioFile.exists()) {
@@ -46,7 +45,6 @@ public class AudioManager {
             System.err.println("Error loading audio from file: " + path + " -> " + e.getMessage());
         }
 
-        // Try classpath resource
         try (InputStream ris = AudioManager.class.getClassLoader().getResourceAsStream(path)) {
             if (ris != null) {
                 try (BufferedInputStream bis = new BufferedInputStream(ris)) {
@@ -56,7 +54,6 @@ public class AudioManager {
                     return clip;
                 }
             } else {
-                // resource not found
                 System.err.println("Audio resource not found: " + path);
             }
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
@@ -65,8 +62,6 @@ public class AudioManager {
 
         return null;
     }
-
-    // Helper to load clip from an InputStream (when iterating jar entries)
     private static Clip loadClipFromStream(InputStream is, String name) {
         if (is == null) return null;
         try (BufferedInputStream bis = new BufferedInputStream(is)) {
@@ -84,7 +79,6 @@ public class AudioManager {
         mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
         bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
         projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
-        // Load all projectile sfx files from Assets/SFX/Projectile
         File projDir = new File(PathsConfig.SFX_DIR + "/Projectile");
         if (projDir.exists() && projDir.isDirectory()) {
             File[] files = projDir.listFiles((d, name) -> name.toLowerCase().endsWith(".wav"));
@@ -95,7 +89,6 @@ public class AudioManager {
                 }
             }
         } else {
-            // Try to load from classpath/jar resources
             try {
                 URL dirUrl = AudioManager.class.getClassLoader().getResource("Assets/SFX/Projectile");
                 if (dirUrl != null) {
@@ -129,7 +122,6 @@ public class AudioManager {
         fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
         louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
         wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
-        // apply configured volumes
         setMusicVolume(musicVolume);
         setSfxVolume(sfxVolume);
     }
@@ -176,7 +168,6 @@ public class AudioManager {
         new Thread(AudioManager::stopAllMusicSync).start();
     }
 
-    // Helper method to perform stopping synchronously (used inside the threads above)
     private static void stopAllMusicSync() {
         try {
             if (mainMenuMusic != null && mainMenuMusic.isRunning()) {
@@ -207,7 +198,6 @@ public class AudioManager {
                 projectileSfx.start();
             }
         } catch (Exception e) {
-            // Swallow audio playback exceptions to avoid crashing the game loop
             System.err.println("Error playing projectile sfx: " + e.getMessage());
         }
     }
@@ -246,7 +236,6 @@ public class AudioManager {
         }
     }
 
-    // Volume helpers
     public static void setMusicVolume(float volume) {
         musicVolume = Math.max(0f, Math.min(1f, volume));
         Config.GameConfig.MUSIC_VOLUME = musicVolume;
@@ -261,7 +250,6 @@ public class AudioManager {
     public static void setSfxVolume(float volume) {
         sfxVolume = Math.max(0f, Math.min(1f, volume));
         Config.GameConfig.SFX_VOLUME = sfxVolume;
-        // apply to loaded SFX
         applyVolume(projectileSfx, sfxVolume);
         for (Clip c : projectileSfxList) applyVolume(c, sfxVolume);
         applyVolume(fireballSfx, sfxVolume);
@@ -280,7 +268,6 @@ public class AudioManager {
                 javax.sound.sampled.FloatControl vol = (javax.sound.sampled.FloatControl) clip.getControl(javax.sound.sampled.FloatControl.Type.MASTER_GAIN);
                 float min = vol.getMinimum();
                 float max = vol.getMaximum();
-                // convert linear 0..1 to decibels
                 float dB;
                 if (volume <= 0f) {
                     dB = min;
@@ -291,7 +278,6 @@ public class AudioManager {
                 vol.setValue(dB);
             }
         } catch (Exception e) {
-            // ignore controls not supported
         }
     }
 }

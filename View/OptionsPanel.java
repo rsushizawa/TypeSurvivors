@@ -24,6 +24,10 @@ public class OptionsPanel implements Renderable {
 
     @Override
     public void render(Graphics2D g, GameModel model, int width, int height) {
+        // Faded black overlay to dim the background
+        g.setColor(new Color(0, 0, 0, 200));
+        g.fillRect(0, 0, width, height);
+
         drawCenteredString(g, "OPTIONS", height / 6, new Color(30, 144, 255), Font.BOLD, 48, width);
 
         int centerX = width / 2;

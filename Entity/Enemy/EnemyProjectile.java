@@ -46,7 +46,6 @@ public class EnemyProjectile extends Enemy {
 
     @Override
     public void render(java.awt.Graphics2D g, Model.GameModel model) {
-        // simple projectile rendering as small filled circle with letter
         g.setColor(java.awt.Color.MAGENTA);
         int r = 6;
         g.fillOval(x - r, y - r, r*2, r*2);

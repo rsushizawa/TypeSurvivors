@@ -318,8 +318,7 @@ public class GamePanel extends JPanel {
                 menuRenderer.renderGameOver(gb, model, gw, gh-300);
                 break;
             case OPTIONS:
-                gb.setColor(new Color(0,0,0,200));
-                gb.fillRect(0,0,gw,gh);
+                // Panel is responsible for drawing its own faded overlay now.
                 optionsPanel.render(gb, model, gw, gh);
                 break;
         }

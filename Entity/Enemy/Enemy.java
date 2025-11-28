@@ -32,7 +32,6 @@ public class Enemy extends AnimatedGameObject {
     public static final int PLAYER_Y_LINE = 1000; 
 
     protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
-        // Call AnimatedGameObject constructor with temporary coordinates; perspective will set x/y
         super(0, 0, sprites, animationSpeed, true);
         this.text = text;
         this.originalText = text;
@@ -69,6 +68,8 @@ public class Enemy extends AnimatedGameObject {
     public void update(){
         this.z += this.zSpeed;
         updatePerspective();
+        // Ensure animated sprite frames advance for enemies
+        super.update();
     }
 
 
@@ -120,7 +121,6 @@ public class Enemy extends AnimatedGameObject {
             }
             g.drawString(text, centeredX, textY);
         } else {
-            // fallback: draw text only
             g.setFont(new Font("Monospaced", Font.BOLD, Config.GameConfig.ENEMY_FONT_SIZE));
             FontMetrics fm = g.getFontMetrics();
             int textWidth = fm.stringWidth(text);

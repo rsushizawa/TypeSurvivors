@@ -35,7 +35,6 @@ public class Player extends AnimatedGameObject {
     @Override
     public void update() {
         super.update();
-        // Add player-specific logic here (input handling, etc.)
     }
     
     public static boolean spritesLoaded() {
