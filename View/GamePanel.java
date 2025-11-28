@@ -27,6 +27,9 @@ public class GamePanel extends JPanel {
     private final GameModel model;
     private final HudRenderer hudRenderer = new HudRenderer();
     private final MenuRenderer menuRenderer = new MenuRenderer();
+    private final MainMenuPanel mainMenuPanel = new MainMenuPanel();
+    private final OptionsPanel optionsPanel = new OptionsPanel();
+    private final PausePanel pausePanel = new PausePanel();
     private final LevelUpRenderer levelUpRenderer = new LevelUpRenderer();
 
     public GamePanel(GameView parent, GameModel model) {
@@ -49,9 +52,9 @@ public class GamePanel extends JPanel {
                 if (model.getGameState() != Data.GameState.MAIN_MENU) return;
                 Point gp = panelToGame(e.getPoint());
                 if (gp == null) return;
-                int idx = menuRenderer.getMainMenuIndexAtPoint(gp);
+                int idx = mainMenuPanel.indexAt(gp);
                 if (idx >= 0) {
-                    menuRenderer.setMainMenuSelected(idx);
+                    mainMenuPanel.setSelected(idx);
                     repaint();
                 }
             }
@@ -63,7 +66,7 @@ public class GamePanel extends JPanel {
                 if (model.getGameState() == Data.GameState.MAIN_MENU) {
                     Point gp = panelToGame(e.getPoint());
                     if (gp == null) return;
-                    int idx = menuRenderer.getMainMenuIndexAtPoint(gp);
+                    int idx = mainMenuPanel.indexAt(gp);
                     if (idx >= 0) {
                         activateMainMenuSelection(idx);
                         return;
@@ -73,7 +76,7 @@ public class GamePanel extends JPanel {
                 if (model.getGameState() == Data.GameState.PAUSED) {
                     Point gp = panelToGame(e.getPoint());
                     if (gp == null) return;
-                    int pidx = menuRenderer.getPauseIndexAtPoint(gp);
+                    int pidx = pausePanel.indexAt(gp);
                     if (pidx >= 0) {
                         activatePauseSelection(pidx);
                         return;
@@ -90,15 +93,15 @@ public class GamePanel extends JPanel {
                 Point gp = panelToGame(e.getPoint());
                 if (gp == null) return;
                 // ensure layout
-                menuRenderer.ensureOptionsLayout(parent.getGameWidth(), parent.getGameHeight());
+                optionsPanel.ensureLayout(parent.getGameWidth(), parent.getGameHeight());
 
-                Rectangle mKnob = menuRenderer.getMusicKnobBounds();
-                Rectangle mTrack = menuRenderer.getMusicSliderBounds();
-                Rectangle sKnob = menuRenderer.getSfxKnobBounds();
-                Rectangle sTrack = menuRenderer.getSfxSliderBounds();
-                Rectangle fsBtn = menuRenderer.getFullscreenToggleBounds();
+                Rectangle mKnob = optionsPanel.getMusicKnobBounds();
+                Rectangle mTrack = optionsPanel.getMusicSliderBounds();
+                Rectangle sKnob = optionsPanel.getSfxKnobBounds();
+                Rectangle sTrack = optionsPanel.getSfxSliderBounds();
+                Rectangle fsBtn = optionsPanel.getFullscreenToggleBounds();
 
-                int idx = menuRenderer.getOptionsIndexAtPoint(gp);
+                int idx = optionsPanel.indexAt(gp);
 
                 if (mKnob.contains(gp) || mTrack.contains(gp)) {
                     draggingMusic = true;
@@ -111,7 +114,7 @@ public class GamePanel extends JPanel {
                     parent.setFullscreen(newFs);
                 } else if (idx >= 0) {
                     // click on option label area
-                    menuRenderer.setOptionsSelected(idx);
+                    optionsPanel.setSelected(idx);
                     if (idx == 0) { // music
                         draggingMusic = true;
                         updateMusicFromX(gp.x, mTrack, mKnob);
@@ -140,12 +143,12 @@ public class GamePanel extends JPanel {
                 if (model.getGameState() != Data.GameState.OPTIONS) return;
                 Point gp = panelToGame(e.getPoint());
                 if (gp == null) return;
-                menuRenderer.ensureOptionsLayout(parent.getGameWidth(), parent.getGameHeight());
+                optionsPanel.ensureLayout(parent.getGameWidth(), parent.getGameHeight());
                 if (draggingMusic) {
-                    updateMusicFromX(gp.x, menuRenderer.getMusicSliderBounds(), menuRenderer.getMusicKnobBounds());
+                    updateMusicFromX(gp.x, optionsPanel.getMusicSliderBounds(), optionsPanel.getMusicKnobBounds());
                     repaint();
                 } else if (draggingSfx) {
-                    updateSfxFromX(gp.x, menuRenderer.getSfxSliderBounds(), menuRenderer.getSfxKnobBounds());
+                    updateSfxFromX(gp.x, optionsPanel.getSfxSliderBounds(), optionsPanel.getSfxKnobBounds());
                     repaint();
                 }
             }
@@ -158,10 +161,10 @@ public class GamePanel extends JPanel {
                 if (model.getGameState() != Data.GameState.OPTIONS) return;
                 Point gp = panelToGame(e.getPoint());
                 if (gp == null) return;
-                menuRenderer.ensureOptionsLayout(parent.getGameWidth(), parent.getGameHeight());
-                int idx = menuRenderer.getOptionsIndexAtPoint(gp);
+                optionsPanel.ensureLayout(parent.getGameWidth(), parent.getGameHeight());
+                int idx = optionsPanel.indexAt(gp);
                 if (idx >= 0) {
-                    menuRenderer.setOptionsSelected(idx);
+                    optionsPanel.setSelected(idx);
                     repaint();
                 }
             }
@@ -216,7 +219,7 @@ public class GamePanel extends JPanel {
 
     // Activate main menu entry at index (or currently selected if -1)
     public void activateMainMenuSelection(int idx) {
-        int selected = idx >= 0 ? idx : menuRenderer.getMainMenuSelected();
+        int selected = idx >= 0 ? idx : mainMenuPanel.getSelected();
         switch (selected) {
             case 0: // Start Game
                 model.startNewGame();
@@ -232,16 +235,16 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    public int getMainMenuSelection() { return menuRenderer.getMainMenuSelected(); }
-    public void setMainMenuSelection(int idx) { menuRenderer.setMainMenuSelected(idx); repaint(); }
+    public int getMainMenuSelection() { return mainMenuPanel.getSelected(); }
+    public void setMainMenuSelection(int idx) { mainMenuPanel.setSelected(idx); repaint(); }
     public void activateMainMenuSelection() { activateMainMenuSelection(-1); }
 
-    public int getOptionsSelection() { return menuRenderer.getOptionsSelected(); }
-    public void setOptionsSelection(int idx) { menuRenderer.setOptionsSelected(idx); repaint(); }
+    public int getOptionsSelection() { return optionsPanel.getSelected(); }
+    public void setOptionsSelection(int idx) { optionsPanel.setSelected(idx); repaint(); }
 
     // Pause menu activation
     public void activatePauseSelection(int idx) {
-        int sel = idx >= 0 ? idx : menuRenderer.getPauseSelected();
+        int sel = idx >= 0 ? idx : pausePanel.getSelected();
         switch (sel) {
             case 0: // Resume
                 model.togglePause();
@@ -256,8 +259,8 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    public int getPauseSelection() { return menuRenderer.getPauseSelected(); }
-    public void setPauseSelection(int idx) { menuRenderer.setPauseSelected(idx); repaint(); }
+    public int getPauseSelection() { return pausePanel.getSelected(); }
+    public void setPauseSelection(int idx) { pausePanel.setSelected(idx); repaint(); }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -290,7 +293,7 @@ public class GamePanel extends JPanel {
         // Updated switch to handle new states (render into gb using game resolution gw/gh)
         switch (model.getGameState()) {
             case MAIN_MENU:
-                menuRenderer.renderMainMenu(gb, model, gw, gh);
+                mainMenuPanel.render(gb, model, gw, gh);
                 break;
             case PLAYING:
                 drawGame(gb, gw, gh);
@@ -298,7 +301,8 @@ public class GamePanel extends JPanel {
                 break;
             case PAUSED:
                 drawGame(gb, gw, gh);
-                menuRenderer.renderPauseOverlay(gb, gw, gh);
+                // render game behind then overlay pause panel
+                pausePanel.render(gb, model, gw, gh);
                 break;
             case LEVEL_UP_CHOICE:
                 drawGame(gb, gw, gh);
@@ -317,7 +321,7 @@ public class GamePanel extends JPanel {
                 // If previous state was playing we might still want to draw the game behind; keep it simple: fill translucent background
                 gb.setColor(new Color(0,0,0,200));
                 gb.fillRect(0,0,gw,gh);
-                menuRenderer.renderOptionsMenu(gb, model, gw, gh);
+                optionsPanel.render(gb, model, gw, gh);
                 break;
         }
 

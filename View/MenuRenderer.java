@@ -12,7 +12,6 @@ import java.util.ArrayList;
 
 public class MenuRenderer {
 
-    // Main menu interactive entries
     private final java.util.List<String> mainMenuItems = new ArrayList<>(Arrays.asList("Start Game", "Options", "Exit"));
     private final java.util.List<Rectangle> mainMenuBounds = new ArrayList<>();
     private int mainMenuSelected = 0;
@@ -26,14 +25,12 @@ public class MenuRenderer {
         }
         return -1;
     }
-    // Interactive bounds for options UI (updated during renderOptionsMenu)
     private Rectangle musicSliderBounds = new Rectangle();
     private Rectangle musicKnobBounds = new Rectangle();
     private Rectangle sfxSliderBounds = new Rectangle();
     private Rectangle sfxKnobBounds = new Rectangle();
     private Rectangle fullscreenToggleBounds = new Rectangle();
     
-    // Options menu selectable entries
     private final java.util.List<String> optionsItems = new ArrayList<>(Arrays.asList("Music Volume", "SFX Volume", "Fullscreen", "Back"));
     private final java.util.List<Rectangle> optionsBounds = new ArrayList<>();
     private int optionsSelected = 0;
