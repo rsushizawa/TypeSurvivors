@@ -18,7 +18,9 @@ public class GameController extends KeyAdapter implements ActionListener {
     private final GameModel model;
     private final GameView view;
     private final Timer gameLoop;
+    
     private Data.GameState previousState = null;
+    private Data.GameState lastState = null;
 
     public GameController(GameModel model, GameView view) {
         this.model = model;
@@ -27,7 +29,7 @@ public class GameController extends KeyAdapter implements ActionListener {
         this.view.addGameKeyListener(this);
         BackgroundManager.init(view);
         this.view.setBackgroundImage(BackgroundManager.getBackgroundForState(model.getGameState()));
-        this.previousState = model.getGameState();
+        this.lastState = model.getGameState();
 
         this.gameLoop = new Timer(GameModel.GAME_SPEED_MS, this);
     }
@@ -265,10 +267,10 @@ public class GameController extends KeyAdapter implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         GameState currentState = model.getGameState();
 
-        if (currentState != previousState) {
+        if (currentState != lastState) {
             Image bg = BackgroundManager.getBackgroundForState(currentState);
             view.setBackgroundImage(bg);
-            previousState = currentState;
+            lastState = currentState;
         }
         
         if (currentState == GameState.PLAYING) {

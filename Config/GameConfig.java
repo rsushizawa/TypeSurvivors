@@ -1,5 +1,7 @@
 package Config;
 
+import javax.swing.plaf.TreeUI;
+
 /**
  * Global game configuration constants.
  */
@@ -74,4 +76,6 @@ public final class GameConfig {
     public static float MUSIC_VOLUME = 0.8f;
     public static float SFX_VOLUME = 0.8f;
     public static boolean FULLSCREEN = false;
+    // Developer debugging visuals
+    public static boolean DEBUG_ROAD_RENDER = true;
 }

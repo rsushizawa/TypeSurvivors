@@ -402,6 +402,57 @@ public class GamePanel extends JPanel {
         g.setStroke(new BasicStroke(1));
 
         hudRenderer.render(g, model, cooldownIconBounds, cooldownIconTooltips, gw, gh);
+
+        // Debug: draw road center and left/right edges following the road path
+        if (Config.GameConfig.DEBUG_ROAD_RENDER) {
+            g.setStroke(new BasicStroke(2f));
+            g.setColor(Color.CYAN);
+            java.util.List<java.awt.Point> centers = new java.util.ArrayList<>();
+            java.util.List<java.awt.Point> lefts = new java.util.ArrayList<>();
+            java.util.List<java.awt.Point> rights = new java.util.ArrayList<>();
+            int steps = 50;
+            for (int i = 0; i <= steps; i++) {
+                double t = i / (double) steps;
+                java.awt.geom.Point2D.Double c = Config.PerspectiveConfig.ROAD_PATH.getPointForZ(t);
+                java.awt.geom.Point2D.Double n = Config.PerspectiveConfig.ROAD_PATH.getNormalForZ(t);
+                // Apply camera vertical offset so debug overlay matches rendered world
+                c.y += Config.PerspectiveConfig.CAMERA_Y_OFFSET;
+                double half = Config.PerspectiveConfig.getRoadHalfWidthForZ(t);
+                int cx = (int) Math.round(c.x);
+                int cy = (int) Math.round(c.y);
+                int lx = (int) Math.round(c.x - n.x * half);
+                int ly = (int) Math.round(c.y - n.y * half);
+                int rx = (int) Math.round(c.x + n.x * half);
+                int ry = (int) Math.round(c.y + n.y * half);
+                centers.add(new java.awt.Point(cx, cy));
+                lefts.add(new java.awt.Point(lx, ly));
+                rights.add(new java.awt.Point(rx, ry));
+            }
+
+            // draw center polyline
+            for (int i = 1; i < centers.size(); i++) {
+                java.awt.Point a = centers.get(i-1);
+                java.awt.Point b = centers.get(i);
+                g.drawLine(a.x, a.y, b.x, b.y);
+            }
+
+            // draw edges
+            g.setColor(Color.YELLOW);
+            for (int i = 1; i < lefts.size(); i++) {
+                java.awt.Point a = lefts.get(i-1);
+                java.awt.Point b = lefts.get(i);
+                g.drawLine(a.x, a.y, b.x, b.y);
+            }
+            for (int i = 1; i < rights.size(); i++) {
+                java.awt.Point a = rights.get(i-1);
+                java.awt.Point b = rights.get(i);
+                g.drawLine(a.x, a.y, b.x, b.y);
+            }
+
+            // small markers at sample points
+            g.setColor(new Color(255, 255, 255, 180));
+            for (java.awt.Point p : centers) g.fillOval(p.x-2, p.y-2, 4, 4);
+        }
     }
 
     private void drawWaveStatus(Graphics2D g, int gw, int gh) {

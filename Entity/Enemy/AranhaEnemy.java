@@ -47,18 +47,21 @@ public class AranhaEnemy extends Enemy {
     public void update(){
         double phase = (this.z * this.worldSpeedX * 0.1 * Math.PI);
         double sin = Math.sin(phase);
-        double speedMultiplier = 1.0 + 0.5 * sin;
+        double speedMultiplier = 1.0 + 1.0 * sin;
         this.z += this.zSpeed * speedMultiplier;
 
         double angle = phase; 
         this.worldX = this.initialWorldX + (Math.sin(angle) * SINE_AMPLITUDE);
         
-        if (this.worldX > this.MAX_WIDTH) {
-            double overshoot = this.worldX - this.MAX_WIDTH;
-            this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
-        } else if (this.worldX < this.MIN_WIDTH) {
-            double overshoot = this.MIN_WIDTH - this.worldX;
-            this.worldX = this.MIN_WIDTH + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        double[] bounds = Config.PerspectiveConfig.getWorldXBoundsForZ(this.z);
+        double minW = bounds[0];
+        double maxW = bounds[1];
+        if (this.worldX > maxW) {
+            double overshoot = this.worldX - maxW;
+            this.worldX = maxW - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
+        } else if (this.worldX < minW) {
+            double overshoot = minW - this.worldX;
+            this.worldX = minW + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_MEDIUM);
         }
 
         updatePerspective();

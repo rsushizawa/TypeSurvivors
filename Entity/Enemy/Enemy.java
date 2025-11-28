@@ -2,6 +2,7 @@ package Entity.Enemy;
 
 import java.awt.image.BufferedImage;
 import Config.EnemyConfig;
+import Config.PerspectiveConfig;
 import Model.GameModel;
 import java.awt.Graphics2D;
 import java.awt.Font;
@@ -25,11 +26,13 @@ public class Enemy extends AnimatedGameObject {
 
     protected double scale;
 
-    public static final int HORIZON_Y = 50;
-    public static final int VANISHING_POINT_X = 300; 
-    public static final double MIN_SCALE = 0.1; 
-    public static final double MAX_SCALE = 1.5;
-    public static final int PLAYER_Y_LINE = 1000; 
+    public static int HORIZON_Y = (int)Math.round(PerspectiveConfig.HORIZON_Y);
+    public static int PLAYER_Y_LINE = (int)Math.round(PerspectiveConfig.PLAYER_Y_LINE);
+
+    public static void refreshPerspectiveConstants() {
+        HORIZON_Y = (int)Math.round(PerspectiveConfig.HORIZON_Y);
+        PLAYER_Y_LINE = (int)Math.round(PerspectiveConfig.PLAYER_Y_LINE);
+    }
 
     protected Enemy(String text, double worldX, double zSpeed, BufferedImage[] sprites, int animationSpeed) {
         super(0, 0, sprites, animationSpeed, true);
@@ -43,11 +46,33 @@ public class Enemy extends AnimatedGameObject {
 
 
     public void updatePerspective() {
-        this.scale = MIN_SCALE + this.z * (MAX_SCALE - MIN_SCALE);
-        
-        this.y = (int)(HORIZON_Y + this.z * (PLAYER_Y_LINE - HORIZON_Y));
-        
-        int projectedX = (int)(VANISHING_POINT_X + (this.worldX - VANISHING_POINT_X) * this.scale);
+        this.scale = PerspectiveConfig.MIN_SCALE + this.z * (PerspectiveConfig.MAX_SCALE - PerspectiveConfig.MIN_SCALE);
+
+        java.awt.geom.Point2D.Double pathPoint = PerspectiveConfig.ROAD_PATH.getPointForZ(this.z);
+        java.awt.geom.Point2D.Double normal = PerspectiveConfig.ROAD_PATH.getNormalForZ(this.z);
+        // Apply global camera vertical offset so the camera can be raised/lowered.
+        pathPoint.y += PerspectiveConfig.CAMERA_Y_OFFSET;
+        this.y = (int) Math.round(pathPoint.y);
+
+        double centerXAtZ = pathPoint.x;
+
+        // Lateral offset in screen pixels (positive = right side along normal)
+        double lateralScreen = (this.worldX - PerspectiveConfig.PLAYER_CENTER_X) * this.scale;
+
+        // Clamp worldX in world-space so movement respects the road edges.
+        double[] bounds = PerspectiveConfig.getWorldXBoundsForZ(this.z);
+        double minAllowedWorldX = bounds[0];
+        double maxAllowedWorldX = bounds[1];
+        if (this.worldX < minAllowedWorldX) this.worldX = minAllowedWorldX;
+        if (this.worldX > maxAllowedWorldX) this.worldX = maxAllowedWorldX;
+
+        // Recompute lateralScreen after potential clamp
+        lateralScreen = (this.worldX - PerspectiveConfig.PLAYER_CENTER_X) * this.scale;
+
+        // Project along the normal so the lateral offset follows the road slope.
+        int projectedX = (int) Math.round(centerXAtZ + normal.x * lateralScreen);
+        int projectedY = (int) Math.round(pathPoint.y + normal.y * lateralScreen);
+        this.y = projectedY;
         int halfScaledWidth = 0;
         int scaledW = getScaledWidth();
         if (scaledW > 0) halfScaledWidth = scaledW / 2;
@@ -68,15 +93,16 @@ public class Enemy extends AnimatedGameObject {
     public void update(){
         this.z += this.zSpeed;
         updatePerspective();
-        // Ensure animated sprite frames advance for enemies
         super.update();
     }
 
 
 
     public void updateAnimation() {
+        if (this.animatedSprite != null) {
+            this.animatedSprite.updateAnimation();
+        }
     }
-
     public void onModelUpdate(GameModel model) {
     }
 

@@ -2,7 +2,6 @@ package Entity.Enemy;
 
 import Animation.SpriteSheetLoader;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 
 public class VespaEnemy extends Enemy {
     
@@ -14,15 +13,14 @@ public class VespaEnemy extends Enemy {
     private static final int ANIMATION_SPEED = 12;
 
     private double worldSpeedX;
-    private static final Random random = new Random();
     
     private static BufferedImage[] orcSprites = null;
     
     static {
-        loadOrcSprites();
+        loadSprites();
     }
     
-    private static void loadOrcSprites() {
+    private static void loadSprites() {
         orcSprites = SpriteSheetLoader.loadSpriteRow(
             SPRITE_PATH, 
             WALK_DOWN_ROW, 
@@ -47,14 +45,18 @@ public class VespaEnemy extends Enemy {
         
         this.worldX += this.worldSpeedX;
         
-        if (this.worldX > this.MAX_WIDTH) {
-            double overshoot = this.worldX - this.MAX_WIDTH;
+        // Bounce against road edges computed for this z so bees follow the curved road
+        double[] bounds = Config.PerspectiveConfig.getWorldXBoundsForZ(this.z);
+        double minW = bounds[0];
+        double maxW = bounds[1];
+        if (this.worldX > maxW) {
+            double overshoot = this.worldX - maxW;
             this.worldSpeedX = -Math.abs(this.worldSpeedX);
-            this.worldX = this.MAX_WIDTH - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
-        } else if (this.worldX < this.MIN_WIDTH) {
-            double overshoot = this.MIN_WIDTH - this.worldX;
+            this.worldX = maxW - (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
+        } else if (this.worldX < minW) {
+            double overshoot = minW - this.worldX;
             this.worldSpeedX = Math.abs(this.worldSpeedX);
-            this.worldX = this.MIN_WIDTH + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
+            this.worldX = minW + (overshoot * Config.EnemyConfig.BOUNCE_FACTOR_LARGE);
         }
         
         updatePerspective();
