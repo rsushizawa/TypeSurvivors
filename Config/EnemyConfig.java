@@ -53,4 +53,16 @@ public final class EnemyConfig {
 
 	// Speed (pixels per tick) for projectiles launched by LouvaDeus
 	public static final int LOUVADEUS_PROJECTILE_SPEED = 2;
+
+	// Aranha (spider) attack defaults
+	public static final double ARANHA_ATTACK_DELAY_SECONDS = 6.0;
+	public static final double ARANHA_ATTACK_COOLDOWN_SECONDS = 7.0;
+	public static final int ARANHA_PROJECTILE_SPEED = 3;
+	public static final int ARANHA_MAX_ATTACKS = -1;
+
+	// Vespa (wasp) attack defaults
+	public static final double VESPA_ATTACK_DELAY_SECONDS = 5.5;
+	public static final double VESPA_ATTACK_COOLDOWN_SECONDS = 8.0;
+	public static final int VESPA_PROJECTILE_SPEED = 3;
+	public static final int VESPA_MAX_ATTACKS = -1;
 }

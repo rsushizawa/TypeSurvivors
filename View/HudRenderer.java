@@ -54,6 +54,45 @@ public class HudRenderer {
             }
         }
 
+        // Stun / Poison indicators
+        double stunRem = model.getStunRemaining();
+        double stunMax = model.getStunMax();
+        double poisonRem = model.getPoisonRemaining();
+        double poisonMax = model.getPoisonMax();
+
+        int statusX = panelWidth - 360;
+        int statusY = 50;
+        int statusBarW = 140;
+        int statusBarH = 8;
+
+        if (stunRem > 0.0 && stunMax > 0.0) {
+            g.setColor(new Color(80, 160, 255));
+            g.setFont(new Font("Monospaced", Font.PLAIN, Config.GameConfig.STATS_FONT - 4));
+            g.drawString(String.format("Stunned: %.1fs", stunRem), statusX, statusY);
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(statusX, statusY + 4, statusBarW, statusBarH);
+            double frac = Math.max(0.0, Math.min(1.0, (stunMax - stunRem) / stunMax));
+            g.setColor(new Color(120, 200, 255));
+            g.fillRect(statusX, statusY + 4, (int) Math.round(statusBarW * frac), statusBarH);
+            g.setColor(Color.WHITE);
+            g.drawRect(statusX, statusY + 4, statusBarW, statusBarH);
+            statusY += 18;
+        }
+
+        if (poisonRem > 0.0 && poisonMax > 0.0) {
+            g.setColor(new Color(200, 255, 120));
+            g.setFont(new Font("Monospaced", Font.PLAIN, Config.GameConfig.STATS_FONT - 4));
+            g.drawString(String.format("Poisoned: %.1fs", poisonRem), statusX, statusY);
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(statusX, statusY + 4, statusBarW, statusBarH);
+            double frac = Math.max(0.0, Math.min(1.0, (poisonMax - poisonRem) / poisonMax));
+            g.setColor(new Color(120, 200, 120));
+            g.fillRect(statusX, statusY + 4, (int) Math.round(statusBarW * frac), statusBarH);
+            g.setColor(Color.WHITE);
+            g.drawRect(statusX, statusY + 4, statusBarW, statusBarH);
+            statusY += 18;
+        }
+
         int iconSize = Config.GameConfig.COOLDOWN_ICON_SIZE;
         int padding = Config.GameConfig.COOLDOWN_ICON_PADDING;
         int ox = panelWidth - padding - iconSize;
