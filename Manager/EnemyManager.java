@@ -3,9 +3,11 @@ package Manager;
 import Entity.Enemy.Enemy;
 import Config.EnemyConfig;
 import Entity.Enemy.AranhaEnemy;
+import Entity.Enemy.AranhaProjectile;
 import Entity.Enemy.LouvaDeusEnemy;
 import Entity.Enemy.OrcEnemy;
 import Entity.Enemy.VespaEnemy;
+import Entity.Enemy.VespaProjectile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -191,6 +193,23 @@ public class EnemyManager {
                 if (ep.y >= Entity.Enemy.Enemy.PLAYER_Y_LINE) {
                     // If this mini-enemy was the current typing target, clear typing state
                     model.resetTypingIfTarget(ep);
+                    // Special-case projectiles with status effects
+                    if (ep instanceof AranhaProjectile) {
+                        // Aranha: stun the player for 0.5 - 2.0 seconds
+                        double stunSec = 0.5 + (random.nextDouble() * 1.5);
+                        model.applyStun(stunSec);
+                        System.out.println(String.format("[DEBUG] AranhaProjectile stunned player for %.2fs", stunSec));
+                        iter.remove();
+                        continue;
+                    } else if (ep instanceof VespaProjectile) {
+                        // Vespa: apply poison window (10s)
+                        model.applyPoisonWindow(10.0);
+                        System.out.println("[DEBUG] VespaProjectile applied poison window (10s)");
+                        iter.remove();
+                        continue;
+                    }
+
+                    // Default behavior: damage player
                     model.loseLife();
                     System.out.println(String.format("[DEBUG] EnemyProjectile reached line at (%d,%d). Lives now: %d", ep.x, ep.y, model.getLives()));
                     iter.remove();

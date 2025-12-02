@@ -59,6 +59,14 @@ public class GameModel {
     private double healthRegenCooldown = 0.0;
     private double healthRegenMaxCooldown = 0.0;
 
+    // Player status effects from enemy projectiles
+    private double stunRemaining = 0.0; // seconds
+    private double stunMax = 0.0; // the original stun duration for HUD fraction
+
+    // Poison window: when active, the next enemy reaching the line deals double damage.
+    private double poisonRemaining = 0.0; // seconds
+    private double poisonMax = 0.0;
+
     public GameModel(int gameWidth, int gameHeight) {
         this.waveManager = new WaveManager();
         this.enemyManager = new EnemyManager(gameWidth, gameHeight);
@@ -246,6 +254,8 @@ public class GameModel {
         if (fireBallCooldown > 0) fireBallCooldown -= delta;
         if (insectSprayCooldown > 0) insectSprayCooldown -= delta;
         if (splitShotCooldown > 0) splitShotCooldown -= delta;
+        if (stunRemaining > 0) stunRemaining = Math.max(0.0, stunRemaining - delta);
+        if (poisonRemaining > 0) poisonRemaining = Math.max(0.0, poisonRemaining - delta);
         
         if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) {
             if (wallCooldown > 0) {
@@ -341,7 +351,15 @@ public class GameModel {
     private void updateAndCheckLostEnemies() {
         ArrayList<Enemy> lostEnemies = enemyManager.updateEnemies(isWallActive() ? wallYPosition : -1, this);
         for (Enemy lostEnemy : lostEnemies) {
-            loseLife();
+            // If poisoned, the next enemy to reach the line deals double damage (consume poison)
+            if (poisonRemaining > 0.0) {
+                // apply double damage
+                loseLife();
+                loseLife();
+                poisonRemaining = 0.0;
+            } else {
+                loseLife();
+            }
             typingManager.checkTargetLost(lostEnemy);
         }
         if (!pendingEnemies.isEmpty()) {
@@ -365,6 +383,10 @@ public class GameModel {
 
     public void appendTypedCharacter(char c) {
         if (gameState != GameState.PLAYING) return;
+        if (stunRemaining > 0.0) {
+            AudioManager.playWrongKeySfx();
+            return;
+        }
         
         Enemy preHitTarget = typingManager.getTargetEnemy();
         
@@ -580,6 +602,27 @@ public class GameModel {
     public java.util.List<GameObject.FireBallEffect> getFireBallEffects() {
         return fireBallEffects;
     }
+
+    // --- Stun / Poison effects API ---
+    // Apply a stun effect (seconds). Stun will block player typing for its duration.
+    public void applyStun(double seconds) {
+        if (seconds <= 0) return;
+        this.stunRemaining = seconds;
+        this.stunMax = seconds;
+    }
+
+    // Apply poison window (seconds): during this time, the next enemy that reaches
+    // the line deals double damage. The window is consumed when that happens.
+    public void applyPoisonWindow(double seconds) {
+        if (seconds <= 0) return;
+        this.poisonRemaining = seconds;
+        this.poisonMax = seconds;
+    }
+
+    public double getStunRemaining() { return stunRemaining; }
+    public double getStunMax() { return stunMax; }
+    public double getPoisonRemaining() { return poisonRemaining; }
+    public double getPoisonMax() { return poisonMax; }
 
     public double getFireBallCooldown() { return fireBallCooldown; }
         
