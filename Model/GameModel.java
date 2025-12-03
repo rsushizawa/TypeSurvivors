@@ -75,7 +75,7 @@ public class GameModel {
         this.leaderboardManager = new LeaderboardManager();
         this.upgradeManager = new UpgradeManager();
             
-        this.player = new Player(gameWidth / 2 - 32, gameHeight - 120);
+        this.player = new Player(gameWidth / 2 - 92, gameHeight - 200);
         this.projectiles = new ArrayList<>();
     }
 
