@@ -6,10 +6,12 @@ import Animation.SpriteSheetLoader;
 import GameObject.AnimatedGameObject;
 
 public class Player extends AnimatedGameObject {
-    private static final String SPRITE_PATH = "Assets/Enemy/orc2_walk_full.png";
-    private static final int SPRITE_WIDTH = 64;
-    private static final int SPRITE_HEIGHT = 64;
+    private static final String SPRITE_PATH = "Assets/cicadasprite.png";
+    private static final int SPRITE_WIDTH = 184;
+    private static final int SPRITE_HEIGHT = 184;
     private static final int IDLE_ROW = 0;
+
+    private static final int ANIMATION_FRAMES = 6;
     private static final int ANIMATION_SPEED = 8;
     
     private static BufferedImage[] idleSprites = null;
@@ -22,7 +24,7 @@ public class Player extends AnimatedGameObject {
         idleSprites = SpriteSheetLoader.loadSpriteRow(
             SPRITE_PATH,
             IDLE_ROW,
-            4,
+            ANIMATION_FRAMES,
             SPRITE_WIDTH,
             SPRITE_HEIGHT
         );

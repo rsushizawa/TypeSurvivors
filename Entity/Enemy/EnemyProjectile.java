@@ -31,6 +31,25 @@ public class EnemyProjectile extends Enemy {
         );
     }
 
+    public EnemyProjectile(char letter, int startX, int startY, int targetX, int targetY, int speed, BufferedImage[] customSprites) {
+        super(String.valueOf(letter), startX, 0.0, customSprites != null ? customSprites : sprites, 1);
+        this.x = startX;
+        this.y = startY;
+
+        double dx = targetX - startX;
+        double dy = targetY - startY;
+        double mag = Math.sqrt(dx*dx + dy*dy);
+        if (mag > 0) {
+            this.vx = (int)((dx / mag) * speed);
+            this.vy = (int)((dy / mag) * speed);
+        } else {
+            this.vx = 0;
+            this.vy = -speed;
+        }
+
+        this.z = 1.0;
+    }
+
     public static boolean spritesLoaded() {
         return sprites != null;
     }
