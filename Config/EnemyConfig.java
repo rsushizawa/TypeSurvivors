@@ -15,7 +15,7 @@ public final class EnemyConfig {
 	// Reference sprite width used to normalize sprite scaling (kept consistent with GameConfig)
 	public static final int REFERENCE_SPRITE_WIDTH = GameConfig.REFERENCE_SPRITE_WIDTH;
 
-	public static final int REFERENCE_PROJECTILE_WIDTH = GameConfig.REFERENCE_SPRITE_WIDTH*2;
+	public static final int REFERENCE_PROJECTILE_WIDTH = GameConfig.REFERENCE_SPRITE_WIDTH*5;
 
 	// Horizontal spawn margins (px)
 	public static final int SPAWN_BORDER = GameConfig.SPAWN_HORIZONTAL_BORDER;

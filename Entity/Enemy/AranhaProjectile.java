@@ -11,7 +11,7 @@ public class AranhaProjectile extends EnemyProjectile {
 
     static {
         try {
-            BufferedImage img = ImageIO.read(new File("Assets/Enemy/aranha_projectile.png"));
+            BufferedImage img = ImageIO.read(new File("Assets/Enemy/teia.png"));
             aranhaSprites = new BufferedImage[] { img };
         } catch (IOException e) {
             aranhaSprites = null;

@@ -250,7 +250,6 @@ public class GamePanel extends JPanel {
     public int getOptionsSelection() { return optionsPanel.getSelected(); }
     public void setOptionsSelection(int idx) { optionsPanel.setSelected(idx); repaint(); }
 
-    // Pause menu activation
     public void activatePauseSelection(int idx) {
         int sel = idx >= 0 ? idx : pausePanel.getSelected();
         switch (sel) {

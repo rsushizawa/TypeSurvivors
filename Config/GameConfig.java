@@ -33,6 +33,8 @@ public final class GameConfig {
 
     // Projectile/rendering sizes
     public static final int PROJECTILE_RADIUS = 3; // px (oval radius)
+    // Reference sprite width for the player's fireball (used for normalizing/fireball-specific scaling)
+    public static final int PLAYER_FIREBALL_REFERENCE_SPRITE_WIDTH = 250;
 
     // Stroke widths
     public static final float DANGER_LINE_STROKE = 3.0f;
