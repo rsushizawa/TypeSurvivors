@@ -256,7 +256,7 @@ public class GameModel {
         if (splitShotCooldown > 0) splitShotCooldown -= delta;
         if (stunRemaining > 0) stunRemaining = Math.max(0.0, stunRemaining - delta);
         if (poisonRemaining > 0) poisonRemaining = Math.max(0.0, poisonRemaining - delta);
-        
+
         if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) {
             if (wallCooldown > 0) {
                 wallCooldown -= delta;
@@ -621,7 +621,7 @@ public class GameModel {
 
     public double getStunRemaining() { return stunRemaining; }
     public double getStunMax() { return stunMax; }
-    public double getPoisonRemaining() { return poisonRemaining; }
+    public double getPoisonRemaining() {return poisonRemaining; }
     public double getPoisonMax() { return poisonMax; }
 
     public double getFireBallCooldown() { return fireBallCooldown; }
@@ -638,6 +638,10 @@ public class GameModel {
             case "Health Regen": return healthRegenCooldown;
             default: return 0.0;
         }
+    }
+
+    public boolean isPoisonActive() {
+        return getPoisonRemaining() > 0.0;
     }
 
     // Enum-based overload for safer access

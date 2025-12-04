@@ -8,6 +8,7 @@ import Entity.Enemy.LouvaDeusEnemy;
 import Entity.Enemy.OrcEnemy;
 import Entity.Enemy.VespaEnemy;
 import Entity.Enemy.VespaProjectile;
+import Audio.AudioManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -204,6 +205,7 @@ public class EnemyManager {
                     } else if (ep instanceof VespaProjectile) {
                         // Vespa: apply poison window (10s)
                         model.applyPoisonWindow(10.0);
+                        AudioManager.playDamagePerSecondSfx();
                         System.out.println("[DEBUG] VespaProjectile applied poison window (10s)");
                         iter.remove();
                         continue;

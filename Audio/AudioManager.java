@@ -29,6 +29,15 @@ public class AudioManager {
     private static Clip fireballSfx;
     private static Clip louvaAttackSfx;
     private static Clip wrongKeySfx;
+    private static Clip stunsfx;
+    private static Clip levelUpsfx;
+    private static Clip barriersfx;
+    private static Clip damagePerSecondsfx;
+    private static Clip death1sfx;
+    private static Clip death2sfx;
+    private static Clip death3sfx;
+    
+
     private static float musicVolume = Config.GameConfig.MUSIC_VOLUME;
     private static float sfxVolume = Config.GameConfig.SFX_VOLUME;
 
@@ -120,8 +129,15 @@ public class AudioManager {
             }
         }
         fireballSfx = loadClip(PathsConfig.FIREBALL_SFX);
+        barriersfx = loadClip(PathsConfig.BARRIER_SFX);
         louvaAttackSfx = loadClip(PathsConfig.LOUVA_ATTACK_SFX);
+        stunsfx = loadClip(PathsConfig.STUN_SFX);
+        levelUpsfx = loadClip(PathsConfig.LEVEL_UP_SFX);
+        death1sfx = loadClip(PathsConfig.DEATH1_SFX);
+        death2sfx = loadClip(PathsConfig.DEATH2_SFX);
+        death3sfx = loadClip(PathsConfig.DEATH3_SFX);
         wrongKeySfx = loadClip(PathsConfig.WRONG_KEY_SFX);
+        damagePerSecondsfx = loadClip(PathsConfig.DAMAGE_PER_SECOND_SFX);
         setMusicVolume(musicVolume);
         setSfxVolume(sfxVolume);
     }
@@ -226,6 +242,93 @@ public class AudioManager {
         }
     }
 
+    public static void playBarrierSfx() {
+        try {
+            if (barriersfx != null) {
+                applyVolume(barriersfx, sfxVolume);
+                barriersfx.setFramePosition(0);
+                barriersfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing barrier sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playStunSfx() {
+        try {
+            if (stunsfx != null) {
+                applyVolume(stunsfx, sfxVolume);
+                stunsfx.setFramePosition(0);
+                stunsfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing stun sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playLevelUpSfx() {
+        try {
+            if (levelUpsfx != null) {
+                applyVolume(levelUpsfx, sfxVolume);
+                levelUpsfx.setFramePosition(0);
+                levelUpsfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing LevelUp sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playDeath1Sfx() {
+        try {
+            if (death1sfx != null) {
+                applyVolume(death1sfx, sfxVolume);
+                death1sfx.setFramePosition(0);
+                death1sfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing death1 sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playDeath2Sfx() {
+        try {
+            if (death2sfx != null) {
+                applyVolume(death2sfx, sfxVolume);
+                death2sfx.setFramePosition(0);
+                death2sfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing death2 sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playDeath3Sfx() {
+        try {
+            if (death3sfx != null) {
+                applyVolume(death3sfx, sfxVolume);
+                death3sfx.setFramePosition(0);
+                death3sfx.start();
+            }
+        } catch (Exception e) {
+             System.err.println("Error playing death3 sfx: " + e.getMessage());
+        }
+    }
+
+    public static void playDamagePerSecondSfx() {
+        
+            try {
+                
+                if (damagePerSecondsfx != null) {
+                    applyVolume(damagePerSecondsfx, sfxVolume);
+                    damagePerSecondsfx.setFramePosition(0);
+                    damagePerSecondsfx.start();
+                }
+            } catch (Exception e) {
+                System.err.println("Error playing damage per second sfx: " + e.getMessage());
+            }
+        
+    }
+
     public static void playWrongKeySfx() {
         try {
             applyVolume(wrongKeySfx, sfxVolume);
@@ -255,6 +358,8 @@ public class AudioManager {
         applyVolume(fireballSfx, sfxVolume);
         applyVolume(louvaAttackSfx, sfxVolume);
         applyVolume(wrongKeySfx, sfxVolume);
+        applyVolume(barriersfx, sfxVolume);
+        applyVolume(damagePerSecondsfx, sfxVolume);
     }
 
     public static float getSfxVolume() {
