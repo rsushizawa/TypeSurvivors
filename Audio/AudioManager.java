@@ -62,6 +62,7 @@ public class AudioManager {
 
         return null;
     }
+    
     private static Clip loadClipFromStream(InputStream is, String name) {
         if (is == null) return null;
         try (BufferedInputStream bis = new BufferedInputStream(is)) {

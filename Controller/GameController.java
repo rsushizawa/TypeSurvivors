@@ -114,6 +114,11 @@ public class GameController extends KeyAdapter implements ActionListener {
                 view.repaint();
                 return;
             }
+            if (model.getGameState() == GameState.LEADERBOARD) {
+                model.setGameState(GameState.MAIN_MENU);
+                view.repaint();
+                return;
+            }
             if (model.getGameState() == GameState.PLAYING || 
                 model.getGameState() == GameState.PAUSED) {
                 model.togglePause();
