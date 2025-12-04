@@ -22,7 +22,10 @@ public class BackgroundManager {
     private static Image loadOrGenerate(String resourcePath, int w, int h, String label) {
         try (InputStream is = BackgroundManager.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (is != null) {
-                return ImageIO.read(is);
+                BufferedImage src = ImageIO.read(is);
+                if (src != null) {
+                    return src;
+                }
             }
         } catch (Exception e) {
         }
@@ -57,6 +60,7 @@ public class BackgroundManager {
         if (state == null) return menuBackground;
         switch (state) {
             case MAIN_MENU:
+            case LEADERBOARD:
                 return menuBackground;
             case PLAYING:
                 return playfieldBackground;

@@ -8,7 +8,7 @@ import Model.GameModel;
 
 public class MainMenuPanel implements Renderable {
 
-    private final java.util.List<String> mainMenuItems = new ArrayList<>(Arrays.asList("Start Game", "Options", "Exit"));
+    private final java.util.List<String> mainMenuItems = new ArrayList<>(Arrays.asList("Start Game", "Options", "Leaderboard", "Exit"));
     private final java.util.List<Rectangle> mainMenuBounds = new ArrayList<>();
     private int mainMenuSelected = 0;
 
@@ -26,8 +26,7 @@ public class MainMenuPanel implements Renderable {
     public void render(Graphics2D g, GameModel model, int width, int height) {
         drawCenteredString(g, "TYPE SURVIVORS", height / 6, new Color(30, 144, 255), Font.BOLD, 60, width);
         drawCenteredString(g, "Type words to destroy enemies!", height / 6 + 60, Color.WHITE, Font.PLAIN, 24, width);
-        // render leaderboard under the subtitle
-        drawLeaderboard(g, model, height / 6 + 120, width);
+        // main menu no longer renders leaderboard inline; it's available as a separate menu option
 
         drawCenteredString(g, "Press ENTER to select or use mouse", height - 80, Color.GREEN, Font.BOLD, 18, width);
         int menuStartY = height - 220;
@@ -95,5 +94,13 @@ public class MainMenuPanel implements Renderable {
             String line = String.format("%-3d %-10s %8d %5d %5d", i + 1, entry.getName(), entry.getScore(), entry.getWave(), entry.getMaxWPM());
             g.drawString(line, (width - fm.stringWidth(line)) / 2, startY + 65 + (i * 25));
         }
+    }
+
+    // Renders the leaderboard as a full screen/menu screen. Public so GamePanel can call it.
+    public void renderLeaderboard(Graphics2D g, GameModel model, int width, int height) {
+        int startY = height / 6;
+        drawCenteredString(g, "TYPE SURVIVORS - LEADERBOARD", startY, new Color(30, 144, 255), Font.BOLD, 36, width);
+        drawLeaderboard(g, model, startY + 60, width);
+        drawCenteredString(g, "Press ESC to return", height - 80, Color.GREEN, Font.BOLD, 18, width);
     }
 }

@@ -2,6 +2,7 @@ package Data;
 
 public enum GameState {
     MAIN_MENU,
+    LEADERBOARD,
     PLAYING,
     PAUSED,
     OPTIONS,

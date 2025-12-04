@@ -233,7 +233,10 @@ public class GamePanel extends JPanel {
             case 1: // Options
                 model.setGameState(Data.GameState.OPTIONS);
                 break;
-            case 2: // Exit
+            case 2: // Leaderboard
+                model.setGameState(Data.GameState.LEADERBOARD);
+                break;
+            case 3: // Exit
                 System.exit(0);
                 break;
         }
@@ -247,7 +250,6 @@ public class GamePanel extends JPanel {
     public int getOptionsSelection() { return optionsPanel.getSelected(); }
     public void setOptionsSelection(int idx) { optionsPanel.setSelected(idx); repaint(); }
 
-    // Pause menu activation
     public void activatePauseSelection(int idx) {
         int sel = idx >= 0 ? idx : pausePanel.getSelected();
         switch (sel) {
@@ -286,7 +288,25 @@ public class GamePanel extends JPanel {
 
         Image backgroundImage = parent.getBackgroundImage();
         if (backgroundImage != null) {
-            gb.drawImage(backgroundImage, 0, 0, gw, gh, this);
+            // If fullscreen and we're on the main menu or leaderboard, draw full image to panel later
+            boolean fullscreenMenu = parent.isFullscreen() && (model.getGameState() == Data.GameState.MAIN_MENU || model.getGameState() == Data.GameState.LEADERBOARD);
+            if (!fullscreenMenu) {
+                // In windowed/menu overlay mode: crop horizontally if source is wider than the game width
+                if (backgroundImage instanceof BufferedImage) {
+                    BufferedImage bi = (BufferedImage) backgroundImage;
+                    int srcW = bi.getWidth();
+                    int srcH = bi.getHeight();
+                    if (srcW > gw) {
+                        int sx = (srcW - gw) / 2;
+                        gb.drawImage(bi, 0, 0, gw, gh, sx, 0, sx + gw, srcH, this);
+                    } else {
+                        gb.drawImage(backgroundImage, 0, 0, gw, gh, this);
+                    }
+                } else {
+                    gb.drawImage(backgroundImage, 0, 0, gw, gh, this);
+                }
+            }
+            // else: leave buffer transparent so we can paint the full image directly to the panel
         } else {
             gb.setColor(Color.BLACK);
             gb.fillRect(0, 0, gw, gh);
@@ -295,6 +315,10 @@ public class GamePanel extends JPanel {
         switch (model.getGameState()) {
             case MAIN_MENU:
                 mainMenuPanel.render(gb, model, gw, gh);
+                break;
+            case LEADERBOARD:
+                // Render leaderboard as its own screen
+                mainMenuPanel.renderLeaderboard(gb, model, gw, gh);
                 break;
             case PLAYING:
                 drawGame(gb, gw, gh);
@@ -325,9 +349,27 @@ public class GamePanel extends JPanel {
 
         gb.dispose();
 
-        // paint black background
+        // paint black background (will be underlay for buffer)
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, 0, panelW, panelH);
+
+        // If fullscreen and we're on the main menu, draw the full background image centered
+        // Scale proportionally so the entire image is visible (no non-uniform stretching)
+        if (backgroundImage != null && parent.isFullscreen() && (model.getGameState() == Data.GameState.MAIN_MENU || model.getGameState() == Data.GameState.LEADERBOARD)) {
+            int srcW = backgroundImage.getWidth(null);
+            int srcH = backgroundImage.getHeight(null);
+            if (srcW > 0 && srcH > 0) {
+                double scale = Math.min((double) panelW / (double) srcW, (double) panelH / (double) srcH);
+                int drawW = (int) Math.round(srcW * scale);
+                int drawH = (int) Math.round(srcH * scale);
+                int drawX = (panelW - drawW) / 2;
+                int drawY = (panelH - drawH) / 2;
+                g2d.drawImage(backgroundImage, drawX, drawY, drawW, drawH, null);
+            } else {
+                // fallback: draw stretched if source size unavailable
+                g2d.drawImage(backgroundImage, 0, 0, panelW, panelH, null);
+            }
+        }
 
         double scale = Math.min(panelW / (double) gw, panelH / (double) gh);
         int drawW = (int) Math.round(gw * scale);
