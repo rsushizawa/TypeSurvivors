@@ -17,6 +17,9 @@ import Config.Theme;
 import Entity.Player.Player;
 import Entity.Projectile.Projectile;
 import Data.WaveState;
+import javax.imageio.ImageIO;
+import java.io.InputStream;
+import java.awt.image.BufferedImage;
 
 public class GamePanel extends JPanel {
 
@@ -33,6 +36,8 @@ public class GamePanel extends JPanel {
     private final LevelUpRenderer levelUpRenderer = new LevelUpRenderer();
     private int targetWidth;
     private int targetHeight;
+    private BufferedImage poisonSprite;
+    private BufferedImage wallSprite;
 
     public GamePanel(GameView parent, GameModel model) {
         this.parent = parent;
@@ -87,6 +92,18 @@ public class GamePanel extends JPanel {
                 }
             }
         });
+
+        // Load optional sprites for poison wall and wall graphic
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("Assets/Enemy/poison wall.png")) {
+            if (is != null) poisonSprite = ImageIO.read(is);
+        } catch (Exception ex) {
+            poisonSprite = null;
+        }
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("Assets/Enemy/wall.png")) {
+            if (is != null) wallSprite = ImageIO.read(is);
+        } catch (Exception ex) {
+            wallSprite = null;
+        }
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -353,8 +370,6 @@ public class GamePanel extends JPanel {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, 0, panelW, panelH);
 
-        // If fullscreen and we're on the main menu, draw the full background image centered
-        // Scale proportionally so the entire image is visible (no non-uniform stretching)
         if (backgroundImage != null && parent.isFullscreen() && (model.getGameState() == Data.GameState.MAIN_MENU || model.getGameState() == Data.GameState.LEADERBOARD)) {
             int srcW = backgroundImage.getWidth(null);
             int srcH = backgroundImage.getHeight(null);
@@ -366,7 +381,6 @@ public class GamePanel extends JPanel {
                 int drawY = (panelH - drawH) / 2;
                 g2d.drawImage(backgroundImage, drawX, drawY, drawW, drawH, null);
             } else {
-                // fallback: draw stretched if source size unavailable
                 g2d.drawImage(backgroundImage, 0, 0, panelW, panelH, null);
             }
         }
@@ -392,23 +406,36 @@ public class GamePanel extends JPanel {
     }
 
     private void drawGame(Graphics2D g, int gw, int gh) {
-        // Draw poison walls
         for (PoisonWall pw : model.getPoisonWalls()) {
             int w = (int) pw.width;
             int h = (int) pw.height;
             int left = pw.x - w/2;
             int top = pw.y - h/2;
-            g.setColor(Theme.poisonFill);
-            g.fillRect(left, top, w, h);
-            g.setColor(Theme.poisonBorder);
-            g.drawRect(left, top, w, h);
+            if (poisonSprite != null) {
+                int sW = poisonSprite.getWidth();
+                int sH = poisonSprite.getHeight();
+                if (sW > 0 && sH > 0) {
+                    double scale = Math.min((double) w / (double) sW, (double) h / (double) sH);
+                    int drawWsprite = Math.max(1, (int) Math.round(sW ));
+                    int drawHsprite = Math.max(1, (int) Math.round(sH ));
+                    int drawLeft = left + (w - drawWsprite) / 2;
+                    int drawTop = top + (h - drawHsprite) / 2;
+                    g.drawImage(poisonSprite, drawLeft, drawTop, drawWsprite, drawHsprite, null);
+                } else {
+                    g.drawImage(poisonSprite, left, top, w, h, null);
+                }
+            } else {
+                g.setColor(Theme.poisonFill);
+                g.fillRect(left, top, w, h);
+                g.setColor(Theme.poisonBorder);
+                g.drawRect(left, top, w, h);
+            }
         }
 
         for (Projectile p : model.getProjectiles()) {
             p.render(g, model);
         }
 
-        // Draw fireball effects
         for (GameObject.FireBallEffect f : model.getFireBallEffects()) {
             f.render(g);
         }
@@ -433,12 +460,30 @@ public class GamePanel extends JPanel {
         g.setStroke(new BasicStroke(Config.GameConfig.DANGER_LINE_STROKE));
         g.drawLine(0, Enemy.PLAYER_Y_LINE, gw, Enemy.PLAYER_Y_LINE);
 
-        // Draw wall
+        // Draw wall (preserve sprite aspect ratio; tile horizontally)
         if (model.isWallActive()) {
-            g.setColor(Theme.wallLine);
-            g.setStroke(new BasicStroke(Config.GameConfig.WALL_STROKE));
             int y = model.getWallYPosition();
-            g.drawLine(0, y, gw, y);
+            int strokeH = Math.max(1, (int) Config.GameConfig.WALL_STROKE);
+            int top = y - strokeH/2;
+            if (wallSprite != null) {
+                int sW = wallSprite.getWidth();
+                int sH = wallSprite.getHeight();
+                if (sW > 0 && sH > 0 && strokeH > 0) {
+                    double scale = (double) strokeH / (double) sH;
+                    if (scale <= 0) scale = 1.0;
+                    int tileW = Math.max(1, (int) Math.round(sW ));
+                    int tileH = Math.max(1, (int) Math.round(sH ));
+                    for (int x = 0; x < gw; x += tileW) {
+                        g.drawImage(wallSprite, x, top, tileW, tileH, null);
+                    }
+                } else {
+                    g.drawImage(wallSprite, 0, top, gw, strokeH, null);
+                }
+            } else {
+                g.setColor(Theme.wallLine);
+                g.setStroke(new BasicStroke(Config.GameConfig.WALL_STROKE));
+                g.drawLine(0, y, gw, y);
+            }
         }
 
         g.setStroke(new BasicStroke(1));
