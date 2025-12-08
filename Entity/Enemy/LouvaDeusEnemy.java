@@ -10,7 +10,7 @@ public class LouvaDeusEnemy extends Enemy {
     private static final int SPRITE_WIDTH = 184;
     private static final int SPRITE_HEIGHT = 184;
     private static final int ANIMATION_FRAMES = 6;
-    private static final int ANIMATION_SPEED = 6;
+    private static final int ANIMATION_SPEED = 4;
 
     private static final int WALK_DOWN_ROW = 0;
     private static final int ATTACK_ROW = Config.EnemyConfig.LOUVADEUS_ATTACK_ROW;

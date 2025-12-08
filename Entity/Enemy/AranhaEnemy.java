@@ -45,7 +45,6 @@ public class AranhaEnemy extends Enemy {
             SPRITE_WIDTH, 
             SPRITE_HEIGHT
         );
-        // attempt to load an attack row if present (row 1)
         attackSprites = SpriteSheetLoader.loadSpriteRow(
             SPRITE_PATH,
             1,

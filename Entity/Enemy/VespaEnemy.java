@@ -44,7 +44,7 @@ public class VespaEnemy extends Enemy {
         );
         attackSprites = SpriteSheetLoader.loadSpriteRow(
             SPRITE_PATH,
-            1,
+            0,
             ANIMATION_FRAMES,
             SPRITE_WIDTH,
             SPRITE_HEIGHT

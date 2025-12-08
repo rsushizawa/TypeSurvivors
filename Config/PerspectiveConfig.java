@@ -10,7 +10,7 @@ public final class PerspectiveConfig {
 
     public static double MIN_SCALE = 0.1;
     public static double MAX_SCALE = 2;
-    public static double HORIZON_Y = 100.0;
+    public static double HORIZON_Y = 270.0;
     public static double PLAYER_Y_LINE = 1000.0;
 
     public static double PLAYER_CENTER_X = 500.0;

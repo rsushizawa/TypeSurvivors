@@ -7,6 +7,10 @@ import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+
+import Config.GameConfig;
+import Config.PerspectiveConfig;
+
 import java.io.File;
 import java.io.IOException;
 import Model.GameModel;
@@ -14,13 +18,13 @@ import Model.GameModel;
 public class Projectile extends GameObject {
     
     private int damage;
-    private static final double PROJECTILE_SPEED = 0.1; 
+    private static final double PROJECTILE_SPEED = 100; 
     private boolean enemyOwned = false;
     private static BufferedImage projectileSprite = null;
 
     static {
         try {
-            projectileSprite = ImageIO.read(new File("Assets/fireball.png"));
+            projectileSprite = ImageIO.read(new File("Assets/airball.png"));
         } catch (IOException e) {
             projectileSprite = null;
         }
@@ -53,7 +57,7 @@ public class Projectile extends GameObject {
     public void update() {
         super.updatePosition();
         
-        if (y < 0 || y > TypeSurvivors.gameHeight || x < 0 || x > TypeSurvivors.gameWidth) {
+        if (y < 0 || y < PerspectiveConfig.HORIZON_Y || x < 0 || x > TypeSurvivors.gameWidth) {
             deactivate();
         }
     }
@@ -75,7 +79,7 @@ public class Projectile extends GameObject {
 
             double angle = 0.0;
             if (this.velocityX != 0 || this.velocityY != 0) {
-                angle = Math.atan2(this.velocityY, this.velocityX) - Math.PI / 2.0; // sprite faces up
+                angle = Math.atan2(this.velocityY, this.velocityX) + Math.PI / 2.0;
             }
 
             AffineTransform old = g.getTransform();
@@ -90,5 +94,5 @@ public class Projectile extends GameObject {
             g.setColor(Color.ORANGE);
             g.fillOval(x - r, y - r, r * 2, r * 2);
         }
-    }
+    }// sprite faces up
 }

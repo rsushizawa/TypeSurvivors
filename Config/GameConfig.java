@@ -32,7 +32,7 @@ public final class GameConfig {
     public static final double BOUNCE_FACTOR_LARGE = 0.6;
 
     // Projectile/rendering sizes
-    public static final int PROJECTILE_RADIUS = 3; // px (oval radius)
+    public static final int PROJECTILE_RADIUS = 15; // px (oval radius)
     // Reference sprite width for the player's fireball (used for normalizing/fireball-specific scaling)
     public static final int PLAYER_FIREBALL_REFERENCE_SPRITE_WIDTH = 250;
 

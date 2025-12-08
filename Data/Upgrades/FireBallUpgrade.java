@@ -29,9 +29,8 @@ public class FireBallUpgrade extends Upgrade {
         double radius = getParam1Value();
         int lettersToRemove = (int) getParam2Value();
 
-        // Iterate over a copy to avoid ConcurrentModificationException
         for (Enemy e : new ArrayList<>(model.getEnemies())) {
-            if (e == target) continue; // Already dead
+            if (e == target) continue;
 
             double distance = Math.hypot(e.x - target.x, e.y - target.y);
 
@@ -47,7 +46,6 @@ public class FireBallUpgrade extends Upgrade {
                 }
             }
         }
-        // Spawn a brief visual effect for the fireball and play SFX
         int fx = target.x;
         int fy = target.y;
     double visualRadius = Math.min(radius, Config.UpgradeConfig.FIREBALL_MAX_RADIUS);
