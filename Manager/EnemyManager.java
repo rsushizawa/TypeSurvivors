@@ -8,6 +8,7 @@ import Entity.Enemy.LouvaDeusEnemy;
 import Entity.Enemy.OrcEnemy;
 import Entity.Enemy.VespaEnemy;
 import Entity.Enemy.VespaProjectile;
+import Audio.AudioManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -198,12 +199,15 @@ public class EnemyManager {
                         // Aranha: stun the player for 0.5 - 2.0 seconds
                         double stunSec = 0.5 + (random.nextDouble() * 1.5);
                         model.applyStun(stunSec);
+                            // Play stun SFX
+                            AudioManager.playStunSfx();
                         System.out.println(String.format("[DEBUG] AranhaProjectile stunned player for %.2fs", stunSec));
                         iter.remove();
                         continue;
                     } else if (ep instanceof VespaProjectile) {
                         // Vespa: apply poison window (10s)
                         model.applyPoisonWindow(10.0);
+                        AudioManager.playDamagePerSecondSfx();
                         System.out.println("[DEBUG] VespaProjectile applied poison window (10s)");
                         iter.remove();
                         continue;

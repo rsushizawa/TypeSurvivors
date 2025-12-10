@@ -256,7 +256,7 @@ public class GameModel {
         if (splitShotCooldown > 0) splitShotCooldown -= delta;
         if (stunRemaining > 0) stunRemaining = Math.max(0.0, stunRemaining - delta);
         if (poisonRemaining > 0) poisonRemaining = Math.max(0.0, poisonRemaining - delta);
-        
+
         if (upgradeManager.hasUpgrade(UpgradeManager.UpgradeId.WALL)) {
             if (wallCooldown > 0) {
                 wallCooldown -= delta;
@@ -345,6 +345,8 @@ public class GameModel {
         this.wallDuration = wall.getParam1Value();
         this.wallCooldown = wall.getParam2Value();
         this.wallYPosition = player.y - (int) wall.getParam3Value();
+        // Play barrier activation SFX
+        Audio.AudioManager.playBarrierSfx();
         return true;
     }
 
@@ -455,6 +457,8 @@ public class GameModel {
                 score += scoreIncrease;
                 
                 resetTypingIfTarget(targetToShootAt);
+                // Play enemy death SFX when player destroys an enemy
+                AudioManager.playDeath1Sfx();
                 enemyManager.removeEnemy(targetToShootAt);
             }
         }
@@ -463,10 +467,12 @@ public class GameModel {
                 wrongCharShakeTime = WRONG_CHAR_SHAKE_DURATION;
             }
         
-        if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
-             this.playerLevel = upgradeManager.getPlayerLevel();
-             gameState = GameState.LEVEL_UP_CHOICE;
-        }
+           if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
+               this.playerLevel = upgradeManager.getPlayerLevel();
+               // Play level-up SFX when opening the level-up choice screen
+               AudioManager.playLevelUpSfx();
+               gameState = GameState.LEVEL_UP_CHOICE;
+           }
     }
 
 
@@ -621,7 +627,7 @@ public class GameModel {
 
     public double getStunRemaining() { return stunRemaining; }
     public double getStunMax() { return stunMax; }
-    public double getPoisonRemaining() { return poisonRemaining; }
+    public double getPoisonRemaining() {return poisonRemaining; }
     public double getPoisonMax() { return poisonMax; }
 
     public double getFireBallCooldown() { return fireBallCooldown; }
@@ -638,6 +644,10 @@ public class GameModel {
             case "Health Regen": return healthRegenCooldown;
             default: return 0.0;
         }
+    }
+
+    public boolean isPoisonActive() {
+        return getPoisonRemaining() > 0.0;
     }
 
     // Enum-based overload for safer access
