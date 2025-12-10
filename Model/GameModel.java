@@ -345,6 +345,8 @@ public class GameModel {
         this.wallDuration = wall.getParam1Value();
         this.wallCooldown = wall.getParam2Value();
         this.wallYPosition = player.y - (int) wall.getParam3Value();
+        // Play barrier activation SFX
+        Audio.AudioManager.playBarrierSfx();
         return true;
     }
 
@@ -455,6 +457,8 @@ public class GameModel {
                 score += scoreIncrease;
                 
                 resetTypingIfTarget(targetToShootAt);
+                // Play enemy death SFX when player destroys an enemy
+                AudioManager.playDeath1Sfx();
                 enemyManager.removeEnemy(targetToShootAt);
             }
         }
@@ -463,10 +467,12 @@ public class GameModel {
                 wrongCharShakeTime = WRONG_CHAR_SHAKE_DURATION;
             }
         
-        if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
-             this.playerLevel = upgradeManager.getPlayerLevel();
-             gameState = GameState.LEVEL_UP_CHOICE;
-        }
+           if (upgradeManager.getPlayerLevel() > this.playerLevel) { 
+               this.playerLevel = upgradeManager.getPlayerLevel();
+               // Play level-up SFX when opening the level-up choice screen
+               AudioManager.playLevelUpSfx();
+               gameState = GameState.LEVEL_UP_CHOICE;
+           }
     }
 
 

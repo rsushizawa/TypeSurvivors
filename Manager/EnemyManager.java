@@ -199,6 +199,8 @@ public class EnemyManager {
                         // Aranha: stun the player for 0.5 - 2.0 seconds
                         double stunSec = 0.5 + (random.nextDouble() * 1.5);
                         model.applyStun(stunSec);
+                            // Play stun SFX
+                            AudioManager.playStunSfx();
                         System.out.println(String.format("[DEBUG] AranhaProjectile stunned player for %.2fs", stunSec));
                         iter.remove();
                         continue;
