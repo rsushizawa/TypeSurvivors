@@ -21,6 +21,7 @@ public final class PathsConfig {
     public static final String PROJECTILE_SFX = SFX_DIR + "/Projectile/Projectile SFX1.wav";
     public static final String LOUVA_ATTACK_SFX = SFX_DIR + "/Louva Attack.wav";
     public static final String MAIN_MENU_MUSIC = MUSIC_DIR + "/interludio.wav";
+    public static final String INTRO_MUSIC = MUSIC_DIR + "/introducao.wav";
     public static final String BOSS_MUSIC = MUSIC_DIR + "/StarWarsPart.wav";
     public static final String WRONG_KEY_SFX = SFX_DIR + "/WrongKey.wav";
     public static final String DEATH1_SFX = SFX_DIR + "/Death/death1.wav";

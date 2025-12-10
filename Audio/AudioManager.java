@@ -17,11 +17,14 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class AudioManager {
 
     private static Clip mainMenuMusic;
+    private static Clip introMusic;
     private static Clip bossMusic;
     private static Clip projectileSfx;
     private static List<Clip> projectileSfxList = new ArrayList<>();
@@ -87,6 +90,7 @@ public class AudioManager {
     
     public static void init() {
         mainMenuMusic = loadClip(PathsConfig.MAIN_MENU_MUSIC);
+        introMusic = loadClip(PathsConfig.INTRO_MUSIC);
         bossMusic = loadClip(PathsConfig.BOSS_MUSIC);
         projectileSfx = loadClip(PathsConfig.PROJECTILE_SFX);
         File projDir = new File(PathsConfig.SFX_DIR + "/Projectile");
@@ -146,10 +150,39 @@ public class AudioManager {
     public static void playMainMenuMusic() {
         new Thread(() -> {
             stopAllMusicSync();
-            if (mainMenuMusic != null) {
-                applyVolume(mainMenuMusic, musicVolume);
-                mainMenuMusic.setFramePosition(0);
-                mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            if (introMusic != null) {
+                try {
+                    applyVolume(introMusic, musicVolume);
+                    introMusic.setFramePosition(0);
+                    LineListener listener = new LineListener() {
+                        @Override
+                        public void update(LineEvent event) {
+                            if (event.getType() == LineEvent.Type.STOP) {
+                                introMusic.removeLineListener(this);
+                                if (mainMenuMusic != null) {
+                                    applyVolume(mainMenuMusic, musicVolume);
+                                    mainMenuMusic.setFramePosition(0);
+                                    mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                                }
+                            }
+                        }
+                    };
+                    introMusic.addLineListener(listener);
+                    introMusic.start();
+                } catch (Exception e) {
+                    System.err.println("Error playing intro music: " + e.getMessage());
+                    if (mainMenuMusic != null) {
+                        applyVolume(mainMenuMusic, musicVolume);
+                        mainMenuMusic.setFramePosition(0);
+                        mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                    }
+                }
+            } else {
+                if (mainMenuMusic != null) {
+                    applyVolume(mainMenuMusic, musicVolume);
+                    mainMenuMusic.setFramePosition(0);
+                    mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                }
             }
         }).start();
     }
@@ -160,7 +193,33 @@ public class AudioManager {
                 if (bossMusic != null && bossMusic.isRunning()) {
                     bossMusic.stop();
                 }
+                // play intro once then loop interludio (mainMenuMusic)
+                if (introMusic != null) {
+                    try {
+                        applyVolume(introMusic, musicVolume);
+                        introMusic.setFramePosition(0);
+                        LineListener listener = new LineListener() {
+                            @Override
+                            public void update(LineEvent event) {
+                                if (event.getType() == LineEvent.Type.STOP) {
+                                    introMusic.removeLineListener(this);
+                                    if (mainMenuMusic != null) {
+                                        applyVolume(mainMenuMusic, musicVolume);
+                                        mainMenuMusic.setFramePosition(0);
+                                        mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                                    }
+                                }
+                            }
+                        };
+                        introMusic.addLineListener(listener);
+                        introMusic.start();
+                        return;
+                    } catch (Exception ex) {
+                        System.err.println("Error playing intro music: " + ex.getMessage());
+                    }
+                }
                 if (mainMenuMusic != null && !mainMenuMusic.isRunning()) {
+                    applyVolume(mainMenuMusic, musicVolume);
                     mainMenuMusic.setFramePosition(0);
                     mainMenuMusic.loop(Clip.LOOP_CONTINUOUSLY);
                 }
@@ -189,6 +248,9 @@ public class AudioManager {
         try {
             if (mainMenuMusic != null && mainMenuMusic.isRunning()) {
                 mainMenuMusic.stop();
+            }
+            if (introMusic != null && introMusic.isRunning()) {
+                introMusic.stop();
             }
             if (bossMusic != null && bossMusic.isRunning()) {
                 bossMusic.stop();
@@ -343,6 +405,7 @@ public class AudioManager {
     public static void setMusicVolume(float volume) {
         musicVolume = Math.max(0f, Math.min(1f, volume));
         Config.GameConfig.MUSIC_VOLUME = musicVolume;
+        applyVolume(introMusic, musicVolume);
         applyVolume(mainMenuMusic, musicVolume);
         applyVolume(bossMusic, musicVolume);
     }
